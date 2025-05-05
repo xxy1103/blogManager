@@ -1,5 +1,6 @@
-package com.ulna.blog_manager.repository; // 替换为你的实际包名
+package com.ulna.blog_manager.repository; 
 
+import com.ulna.blog_manager.model.Blog; 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -95,65 +96,41 @@ public class BlogFileService {
     }
 
     /**
-     * 列出存储目录下所有 Markdown (.md) 文件的文件名。
+     * 递归列出存储目录及其所有子目录下的 Markdown (.md) 文件的文件名。
      *
-     * @return 包含所有 .md 文件名的字符串列表，按字母顺序排序。如果目录为空或发生错误，可能返回空列表。
+     * @return 包含所有 .md 文件的 Blog 对象列表，按字母顺序排序。
+     *         如果目录为空或发生错误，可能返回空列表。
      * @throws RuntimeException 如果访问目录时发生 I/O 错误。
      */
-    public List<String> listPostFilenames() {
-        List<String> filenames = new ArrayList<>();
-        // 定义 Glob 模式以匹配所有以 .md 结尾的文件
-        String glob = "*.md";
+    public List<Blog> listPostFilenames() {
+        List<Blog> blogList = new ArrayList<>();
+        logger.debug("正在递归列出目录 '{}' 中的 .md 文件", storageLocation);
 
-        logger.debug("正在列出目录 '{}' 中匹配 '{}' 的文件", storageLocation, glob);
-
-        // 使用 try-with-resources 确保 DirectoryStream 被正确关闭
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(storageLocation, glob)) {
-            for (Path entry : stream) {
-                // 将找到的文件名添加到列表中
-                filenames.add(entry.getFileName().toString());
-            }
+        try {
+            // 使用 Files.walk 递归遍历目录树
+            Files.walk(storageLocation)
+                .filter(Files::isRegularFile)  // 只处理常规文件，不处理目录
+                .filter(path -> path.toString().endsWith(".md"))  // 只处理 .md 文件
+                .forEach(path -> {
+                    try {
+                        // 读取文件内容并创建 Blog 对象
+                        String content = Files.readString(path, StandardCharsets.UTF_8);
+                        blogList.add(new Blog(content, path)); // 直接使用 Path 对象
+                    } catch (IOException e) {
+                        // 记录单个文件读取错误，但继续处理其他文件
+                        logger.error("读取文件 '{}' 时发生错误", path, e);
+                    }
+                });
         } catch (IOException e) {
             // 记录错误并抛出运行时异常
-            logger.error("无法列出目录 '{}' 中的文件 (Glob: '{}')", this.storageLocation, glob, e);
-            // 在实际应用中，可以考虑定义更具体的自定义异常，如 StorageException
+            logger.error("无法递归列出目录 '{}' 中的文件", this.storageLocation, e);
             throw new RuntimeException("无法列出博客文章文件于 " + this.storageLocation, e);
         }
 
-        logger.debug("找到 {} 个匹配 '{}' 的文件", filenames.size(), glob);
+        logger.debug("找到 {} 个 .md 文件", blogList.size());
         // 对文件名进行排序
-        Collections.sort(filenames);
-        return filenames;
-    }
-
-    /**
-     * 读取指定文件名的 Markdown 文章内容。
-     *
-     * @param filename 要读取的文件名 (例如 "my-post.md")
-     * @return 文件内容的字符串形式。
-     * @throws IOException 如果文件不存在、不是一个常规文件、或在读取时发生 I/O 错误。
-     * @throws RuntimeException 如果发生路径解析安全问题。
-     */
-    public String readPostContent(String filename) throws IOException {
-        // 首先获取安全的文件路径
-        Path filePath = resolve(filename);
-
-        // 检查文件是否存在并且是一个普通文件 (不是目录)
-        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            logger.warn("尝试读取不存在或不是常规文件的文件: {}", filePath);
-            // 抛出 FileNotFoundException 或 NoSuchFileException 更符合语义
-            throw new NoSuchFileException("文件未找到或不是一个常规文件: " + filename);
-        }
-
-        logger.debug("正在读取文件: {}", filePath);
-        try {
-            // 读取文件所有内容为字符串，使用 UTF-8 编码 (推荐)
-            return Files.readString(filePath, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            logger.error("读取文件 '{}' 时发生错误", filePath, e);
-            // 重新抛出异常，让上层调用者处理
-            throw e;
-        }
+        Collections.sort(blogList);
+        return blogList;
     }
 
     /**
@@ -164,21 +141,16 @@ public class BlogFileService {
      * @throws IOException 如果在写入文件时发生 I/O 错误。
      * @throws RuntimeException 如果发生路径解析安全问题。
      */
-    public void savePost(String filename, String content) throws IOException {
+    public void savePost(Blog blog) throws IOException {
         // 首先获取安全的文件路径
-        Path filePath = resolve(filename);
-
-        // 检查传入的内容是否为 null，如果是，可以视情况处理（抛异常或写入空字符串）
-        if (content == null) {
-            content = ""; // 或者抛出 IllegalArgumentException("Content cannot be null");
-        }
+        Path filePath = blog.getFilepath(); // 直接使用 Blog 对象的文件路径
 
         logger.debug("正在保存文件: {}", filePath);
         try {
             // 将字符串内容写入文件，使用 UTF-8 编码。
             // Files.writeString 默认选项是 CREATE, TRUNCATE_EXISTING, WRITE
             // 即：如果文件不存在则创建，如果存在则清空内容再写入。
-            Files.writeString(filePath, content, StandardCharsets.UTF_8);
+            Files.writeString(filePath, blog.toString(), StandardCharsets.UTF_8);
             logger.info("成功保存文件: {}", filePath);
         } catch (IOException e) {
             logger.error("保存文件 '{}' 时发生错误", filePath, e);
@@ -194,9 +166,9 @@ public class BlogFileService {
      * @throws IOException 如果文件不存在或在删除时发生 I/O 错误。
      * @throws RuntimeException 如果发生路径解析安全问题。
      */
-    public void deletePost(String filename) throws IOException {
+    public void deletePost(Blog blog) throws IOException {
         // 首先获取安全的文件路径
-        Path filePath = resolve(filename);
+        Path filePath = blog.getFilepath();
 
         logger.debug("正在尝试删除文件: {}", filePath);
         try {
