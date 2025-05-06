@@ -142,16 +142,24 @@ public class BlogFileService {
      * @param content 要写入文件的 Markdown 内容字符串。
      * @throws IOException 如果在写入文件时发生 I/O 错误。
      * @throws RuntimeException 如果发生路径解析安全问题。
-     */
+     */    
     public void savePost(Blog blog) throws IOException {
         // 首先获取安全的文件路径
         Path filePath = blog.getFilepath(); // 直接使用 Blog 对象的文件路径
 
         logger.debug("正在保存文件: {}", filePath);
         try {
+            // 确保父目录存在，如果不存在则递归创建
+            Path parentDir = filePath.getParent();
+            if (parentDir != null && !Files.exists(parentDir)) {
+                logger.debug("创建父目录: {}", parentDir);
+                Files.createDirectories(parentDir);
+            }
+            
             // 将字符串内容写入文件，使用 UTF-8 编码。
             // Files.writeString 默认选项是 CREATE, TRUNCATE_EXISTING, WRITE
             // 即：如果文件不存在则创建，如果存在则清空内容再写入。
+            //System.out.println(blog.toString());
             Files.writeString(filePath, blog.toString(), StandardCharsets.UTF_8);
             logger.info("成功保存文件: {}", filePath);
         } catch (IOException e) {
@@ -168,7 +176,7 @@ public class BlogFileService {
      * @throws IOException 如果文件不存在或在删除时发生 I/O 错误。
      * @throws RuntimeException 如果发生路径解析安全问题。
      */
-    public void deletePost(Blog blog) throws IOException {
+    public void deleteBlog(Blog blog) throws IOException {
         // 首先获取安全的文件路径
         Path filePath = blog.getFilepath();
 
@@ -188,5 +196,78 @@ public class BlogFileService {
             // 重新抛出异常
             throw e;
         }
+    }
+
+    public boolean addBlog(Blog blog) {
+        if(blog.getFilepath() == null) {
+            // Construct the path from categories and filename
+            String relativePath = blog.getCategories() + "/" + blog.getFilename(); // Ensure no leading slash for correct resolution
+            Path newBlogPath = this.storageLocation.resolve(relativePath).normalize();
+
+            // Security check: Ensure the resolved path is still within the main storage directory
+            if (!newBlogPath.startsWith(this.storageLocation)) {
+                logger.warn("Attempt to create blog outside designated storage area. Base: {}, Target: {}", this.storageLocation, newBlogPath);
+                throw new IllegalArgumentException("Generated blog path is outside the designated storage area: " + newBlogPath.toString());
+            }
+            blog.setFilepath(newBlogPath); // 设置文件路径
+        }
+        try {
+            savePost(blog); // 调用保存方法
+            return true; // 返回成功状态
+        } catch (IOException e) {
+            logger.error("添加博客失败: {}", e.getMessage());
+            return false; // 返回失败状态
+        }
+    }
+    
+    public boolean updateBlogInfo(Blog oldBlog, Blog newBlog) {
+        newBlog.setFilename(oldBlog.getFilename()); // 保留原文件名
+        newBlog.setDate(oldBlog.getDate()); // 保留原日期
+        String relativePath = newBlog.getCategories() + "/" + newBlog.getFilename(); // Ensure no leading slash for correct resolution
+        Path newBlogPath = this.storageLocation.resolve(relativePath).normalize();
+        // Security check: Ensure the resolved path is still within the main storage directory
+        if (!newBlogPath.startsWith(this.storageLocation)) {
+            logger.warn("Attempt to create blog outside designated storage area. Base: {}, Target: {}", this.storageLocation, newBlogPath);
+            throw new IllegalArgumentException("Generated blog path is outside the designated storage area: " + newBlogPath.toString());
+        }
+        newBlog.setFilepath(newBlogPath); // 设置文件路径
+        Blog tmpBlog;
+        try {
+            tmpBlog = newBlog.clone(); // 克隆一个新的对象
+        } catch (CloneNotSupportedException e) {
+            logger.error("克隆博客对象失败: {}", e.getMessage());
+            //fallback
+            tmpBlog = new Blog();
+            // Manually copy properties from newBlog to tmpBlog
+            tmpBlog.setFilepath(newBlog.getFilepath());
+            tmpBlog.setFilename(newBlog.getFilename());
+            tmpBlog.setTitle(newBlog.getTitle());
+            tmpBlog.setDate(newBlog.getDate());
+            tmpBlog.setCategories(newBlog.getCategories());
+            tmpBlog.setTags(newBlog.getTags() != null ? newBlog.getTags().clone() : null); // Deep copy for array
+            tmpBlog.setSaying(newBlog.getSaying());
+            // Content will be set from oldBlog.loadContent() later
+            logger.warn("克隆博客对象失败，使用手动复制作为后备。");
+            
+        }
+        tmpBlog.setContent(oldBlog.loadContent()); // 设置内容为旧博客的内容
+        try{
+            deleteBlog(oldBlog); // 删除旧博客
+            savePost(tmpBlog); // 保存新博客
+            return true; // 返回成功状态    
+        }
+        catch (IOException e) {
+            logger.error("更新博客失败: {}", e.getMessage());
+            try{
+                Blog tmpOBlog = oldBlog.clone(); 
+                tmpOBlog.setContent(tmpBlog.getContent());
+                savePost(oldBlog);
+            }
+            catch(Exception ee){
+                return false;
+            }
+            return false; // 返回失败状态
+        }
+
     }
 }

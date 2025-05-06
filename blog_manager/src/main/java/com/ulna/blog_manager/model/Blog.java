@@ -23,13 +23,14 @@ public class Blog implements Comparable<Blog>,Cloneable {
     private String categories;  // 博客分类
     private String[] tags;      //标签
     private String saying;      //谚语
-    private String content;     // 博客内容
+    private String content;     //博客内容
 
     // 用于解析日期时间字符串的格式化器
     // 用于解析日期时间字符串的格式化器 - 更灵活的格式
     private static final DateTimeFormatter formatter = 
         DateTimeFormatter.ofPattern("yyyy-M-d H:m:s");
-
+    // 创建自定义格式的 DateTimeFormatter
+    private static final DateTimeFormatter formatterPrint = DateTimeFormatter.ofPattern("'_'yyyyMMdd'_'HHmmss");
     @Override
     public Blog clone() throws CloneNotSupportedException {
         Blog cloned = (Blog) super.clone(); // 利用Object.clone()创建浅拷贝
@@ -42,7 +43,6 @@ public class Blog implements Comparable<Blog>,Cloneable {
         return cloned;
     }
     
-
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
@@ -58,6 +58,35 @@ public class Blog implements Comparable<Blog>,Cloneable {
      */
     public Blog() {}
     
+    public Blog(
+        String title,
+        String categories,
+        String[] tags,
+        String saying) {
+            this.title = title;
+            this.categories = categories;
+            this.tags = tags;
+            this.saying = saying;
+            this.dateTime = LocalDateTime.now(); // 默认当前时间
+            this.content = null; // 默认内容为空
+            this.filename = title+this.dateTime.format(formatterPrint)+".md"; // 默认文件名
+            this.filepath = null;           
+        }
+    public Blog(
+        String title,
+        String categories,
+        String[] tags,
+        String saying,
+        LocalDateTime dateTime) {
+            this.title = title;
+            this.categories = categories;
+            this.tags = tags;
+            this.saying = saying;
+            this.dateTime = dateTime; // 默认当前时间
+            this.content = null; // 默认内容为空
+            this.filename = null; // 默认文件名
+            this.filepath = null;           
+        }
     /**
      * 从文件内容构造Blog对象的构造方法
      * 
