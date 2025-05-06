@@ -12,11 +12,12 @@ import java.time.format.DateTimeFormatter;
 import java.io.IOException;
 
 
-public class Blog implements Comparable<Blog> {
+public class Blog implements Comparable<Blog>,Cloneable {
     private static final String FRONT_MATTER_DELIMITER = "---";
     private static final String MORE_TAG = "<!-- more -->";
     
     private Path filepath;    // 博客路径
+    private String filename;  // 博客文件名
     private String title;       // 博客标题
     private LocalDateTime dateTime;        // 博客日期
     private String categories;  // 博客分类
@@ -29,6 +30,28 @@ public class Blog implements Comparable<Blog> {
     private static final DateTimeFormatter formatter = 
         DateTimeFormatter.ofPattern("yyyy-M-d H:m:s");
 
+    @Override
+    public Blog clone() throws CloneNotSupportedException {
+        Blog cloned = (Blog) super.clone(); // 利用Object.clone()创建浅拷贝
+        
+        // 然后只需要对可变字段进行深拷贝
+        if (this.tags != null) {
+            cloned.tags = this.tags.clone();
+        }
+        
+        return cloned;
+    }
+    
+
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Blog other = (Blog) obj;
+        return filename.equals(other.filename);
+    }
+    public int hashCode() {
+        return filename.hashCode();
+    }
 
     /**
      * 默认无参构造方法
@@ -43,6 +66,8 @@ public class Blog implements Comparable<Blog> {
      */
     public Blog(String fileContent,Path path) {
         this.filepath = path;
+        this.filename = path.getFileName().toString(); // 获取文件名
+        // --- 解析 Front-matter 部分 (YAML) ---
         if (fileContent == null || !fileContent.startsWith(FRONT_MATTER_DELIMITER)) {
             throw new IllegalArgumentException("无效的文件内容：必须以 '---' 开头。");
         }
@@ -124,6 +149,8 @@ public class Blog implements Comparable<Blog> {
     }
     public Path getFilepath() { return filepath; }
     public void setFilepath(Path filepath) { this.filepath = filepath; }
+    public String getFilename() { return filename; }
+    public void setFilename(String filename) { this.filename = filename; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public LocalDateTime getDate() { return dateTime; }
@@ -189,6 +216,7 @@ public class Blog implements Comparable<Blog> {
     }
     
     public void setContent(String content) { this.content = content; }
+    public String getContent() { return content; }
     
     
     public String Info() {
@@ -249,7 +277,7 @@ public class Blog implements Comparable<Blog> {
     @Override
     public int compareTo(Blog other) {
 
-        return this.dateTime.compareTo(other.dateTime);
+        return other.dateTime.compareTo(this.dateTime);
 
     }
 }

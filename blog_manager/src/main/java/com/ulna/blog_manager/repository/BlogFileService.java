@@ -23,6 +23,7 @@ public class BlogFileService {
 
     private final Path storageLocation; // 博客文件存储的根目录路径对象
 
+    
     /**
      * 服务构造函数。
      * 使用 @Value 注解从配置文件 (application.properties/yml) 注入博客存储路径。
@@ -103,6 +104,7 @@ public class BlogFileService {
      * @throws RuntimeException 如果访问目录时发生 I/O 错误。
      */
     public List<Blog> listPostFilenames() {
+        
         List<Blog> blogList = new ArrayList<>();
         logger.debug("正在递归列出目录 '{}' 中的 .md 文件", storageLocation);
 
