@@ -250,56 +250,49 @@ public class Blog implements Comparable<Blog>,Cloneable {
     
     public String Info() {
         if (this.saying != null){
-            return "Blog{ \n" +
-                    "---\n" +
+            return "---\n" +
                     "title: " + title + '\n' +
                     "date: " + (dateTime.toString()) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
-                    "saying: " + saying + '\n' +
+                    saying + '\n' +
                     "<!-- more -->\n" +
-                    (content != null ? content.substring(0, Math.min(content.length(), 50)) + "..." : "null") + '\n' +
-                    '}';
+                    (content != null ? content.substring(0, Math.min(content.length(), 50)) + "..." : "null");
         }
         else{
-            return "Blog{ \n" +
-                    "---\n" +
+            return  "---\n" +
                     "title: " + title + '\n' +
                     "date: " + (dateTime.toString()) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
-                    (content != null ? content.substring(0, Math.min(content.length(), 50)) + "..." : "null") + '\n' +
-                    '}';
+                    (content != null ? content.substring(0, Math.min(content.length(), 50)) + "..." : "null");
         }
     }
 
     @Override
     public String toString() {
         if (this.saying != null){
-            return "Blog{ \n" +
-                    "---\n" +
+            return "---\n" +
                     "title: " + title + '\n' +
                     "date: " + (dateTime.toString()) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
-                    "saying: " + saying + '\n' +
+                    saying + '\n' +
                     "<!-- more -->\n" +
-                    (content != null ? content : "null") + '\n' +
-                    '}';
+                    (content != null ? content : "null");
         }
         else{
-            return "Blog{ \n" +
-                    "---\n" +
+            return "---\n" +
                     "title: " + title + '\n' +
                     "date: " + (dateTime.toString()) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
-                    (content != null ? content : "null") + '\n' +
-                    '}';
+                    (content != null ? content : "null");
+
         }
     }
 
