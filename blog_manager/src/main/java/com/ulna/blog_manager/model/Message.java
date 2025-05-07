@@ -10,4 +10,16 @@ public class Message {
         this.data = data;
         this.error = error;
     }
+    
+    public int getStatus() {
+        return status;
+    }
+    
+    public Object getData() {
+        return data;
+    }
+    
+    public String getError() {
+        return error;
+    }
 }
