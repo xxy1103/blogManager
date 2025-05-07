@@ -1,6 +1,11 @@
 <template>
   <div class="blog-list-view">
-    <h1>我的博客</h1>
+    <div class="header-container">
+      <h1>我的博客</h1>
+      <router-link to="/blog/add" class="add-blog-btn">
+        <span>+</span> 创建新博客
+      </router-link>
+    </div>
     <div v-if="loading" class="loading">正在加载...</div>
     <div v-if="error" class="error">{{ error }}</div>
     <ul v-if="!loading && !error && blogs.length > 0" class="blog-list">
@@ -76,6 +81,35 @@ onMounted(() => {
   margin: 20px auto;
   padding: 20px;
   font-family: sans-serif;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.add-blog-btn {
+  display: inline-block;
+  background-color: #4caf50;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+}
+
+.add-blog-btn span {
+  font-size: 18px;
+  margin-right: 5px;
+}
+
+.add-blog-btn:hover {
+  background-color: #3d9c40;
 }
 
 .loading,

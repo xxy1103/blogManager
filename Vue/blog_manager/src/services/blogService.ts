@@ -94,3 +94,34 @@ export async function updateBlogContent(
     }
   }
 }
+
+export async function addBlog(
+  title: string,
+  categories: string,
+  tags: string[],
+  saying: string,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const tagsParams = tags.map((tag) => `tags=${encodeURIComponent(tag)}`).join('&')
+    const url = `${API_BASE_URL}/blogs/add?title=${encodeURIComponent(title)}&categories=${encodeURIComponent(categories)}&${tagsParams}&saying=${encodeURIComponent(saying)}`
+
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+
+    const result: ApiResponse<null> = await response.json()
+    if (result.status === 0) {
+      return { success: true, message: '添加博客成功' }
+    } else {
+      console.error('Error adding blog:', result.error)
+      return { success: false, message: result.error || '添加博客失败' }
+    }
+  } catch (error) {
+    console.error('Failed to add blog:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : '添加博客失败',
+    }
+  }
+}
