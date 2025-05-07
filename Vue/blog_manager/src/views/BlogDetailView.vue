@@ -2,18 +2,10 @@
   <div class="blog-detail-view">
     <div v-if="loading" class="loading">正在加载博客内容...</div>
     <div v-if="error" class="error">{{ error }}</div>
-    <div v-if="saveMessage" :class="['save-message', saveSuccess ? 'success' : 'error']">
-      {{ saveMessage }}
-    </div>
 
     <article v-if="blog" class="blog-content">
       <div class="blog-actions">
-        <button @click="toggleEditMode" class="btn">
-          {{ isEditing ? '退出编辑' : '编辑博客' }}
-        </button>
-        <button v-if="isEditing" @click="saveBlogContent" class="btn save-btn" :disabled="isSaving">
-          {{ isSaving ? '保存中...' : '保存更改' }}
-        </button>
+        <button @click="navigateToEditPage" class="btn">编辑博客</button>
       </div>
 
       <h1>{{ blog.title }}</h1>
@@ -25,13 +17,8 @@
       <div class="saying"><strong>摘要：</strong> {{ blog.saying }}</div>
       <hr />
 
-      <!-- 编辑模式：显示 Toast UI Editor -->
-      <div v-if="isEditing" class="edit-content">
-        <div ref="editorRefElement"></div>
-      </div>
-
       <!-- 非编辑模式：显示渲染后的 HTML -->
-      <div v-else v-html="renderedContent" class="content-html"></div>
+      <div v-html="renderedContent" class="content-html"></div>
     </article>
 
     <div v-if="!loading && !blog && !error" class="not-found">博客未找到。</div>
@@ -40,59 +27,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed, nextTick, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
-import { getBlogDetail, updateBlogContent } from '@/services/blogService'
+// 导入 watch 和 RouteParams 类型
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter, type RouteParams } from 'vue-router'
+import { getBlogDetail } from '@/services/blogService'
 import type { BlogDetail } from '@/types/blog'
-import { marked } from 'marked' // 用于将 Markdown 转换为 HTML
-import Editor from '@toast-ui/editor'
-import '@toast-ui/editor/dist/toastui-editor.css' // Editor's Style
+import { marked } from 'marked'
 
 const route = useRoute()
+const router = useRouter()
+
 const blog = ref<BlogDetail | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
-const isEditing = ref(false)
-const editContent = ref('') // This will hold the markdown content from the editor
-const originalContent = ref('') // 存储原始的 Markdown 内容
-const isSaving = ref(false)
-const saveMessage = ref('')
-const saveSuccess = ref(false)
 
-const editorRefElement = ref<HTMLElement | null>(null)
-let editorInstance: Editor | null = null
+// 移除了所有与内联编辑相关的 ref 和变量
 
-// 计算属性：渲染的HTML内容 (用于非编辑模式)
 const renderedContent = computed(() => {
-  // When not editing, blog.value.content is assumed to be the raw Markdown.
   return blog.value ? marked(blog.value.content) : ''
 })
 
-const initEditor = () => {
-  if (editorRefElement.value && !editorInstance) {
-    editorInstance = new Editor({
-      el: editorRefElement.value,
-      height: '500px',
-      initialEditType: 'markdown', // Or 'wysiwyg'
-      previewStyle: 'vertical', // Or 'tab'
-      initialValue: editContent.value, // Use editContent which holds the raw markdown
-      events: {
-        change: () => {
-          if (editorInstance) {
-            editContent.value = editorInstance.getMarkdown()
-          }
-        },
-      },
-    })
-  }
-}
-
-const destroyEditor = () => {
-  if (editorInstance) {
-    editorInstance.destroy()
-    editorInstance = null
-  }
-}
+// 移除了 initEditor, destroyEditor
 
 const fetchBlog = async () => {
   loading.value = true
@@ -119,15 +74,7 @@ const fetchBlog = async () => {
       filename as string,
     )
     if (fetchedBlog) {
-      originalContent.value = fetchedBlog.content // Store raw Markdown
-      editContent.value = fetchedBlog.content // Set initial edit content to raw Markdown
-      blog.value = { ...fetchedBlog } // Store the fetched blog details
-
-      // If already in editing mode when blog is fetched (e.g., on route change while editing),
-      // update the editor content.
-      if (isEditing.value && editorInstance) {
-        editorInstance.setMarkdown(editContent.value)
-      }
+      blog.value = fetchedBlog
     } else {
       error.value = '博客加载失败或未找到。'
     }
@@ -154,120 +101,34 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const toggleEditMode = async () => {
-  isEditing.value = !isEditing.value
-  saveMessage.value = ''
-
-  if (isEditing.value) {
-    // Entering edit mode
-    editContent.value = originalContent.value // Ensure editor starts with original content
-    await nextTick() // Wait for DOM update (editorRefElement to be available)
-    initEditor()
-  } else {
-    // Exiting edit mode
-    if (editContent.value !== originalContent.value) {
-      if (!confirm('您有未保存的更改，确定要放弃吗？')) {
-        isEditing.value = true // Revert to editing mode if user cancels
-        return
-      }
-    }
-    editContent.value = originalContent.value // Reset editContent to original
-    destroyEditor()
-  }
-}
-
-const saveBlogContent = async () => {
-  if (!blog.value || !editorInstance) return
-
-  const currentMarkdown = editorInstance.getMarkdown() // Get content from editor
-
+const navigateToEditPage = () => {
+  if (!blog.value) return
   const { year, month, day, filename } = route.params
-  if (
-    Array.isArray(year) ||
-    Array.isArray(month) ||
-    Array.isArray(day) ||
-    Array.isArray(filename)
-  ) {
-    error.value = '无效的博客链接参数'
-    return
-  }
-
-  isSaving.value = true
-  saveMessage.value = ''
-
-  try {
-    const result = await updateBlogContent(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-      currentMarkdown, // Save the markdown from the editor
-    )
-
-    saveSuccess.value = result.success
-    saveMessage.value = result.message
-
-    if (result.success) {
-      originalContent.value = currentMarkdown
-      if (blog.value) {
-        blog.value.content = currentMarkdown // Update the blog's content with the new markdown
-      }
-      editContent.value = currentMarkdown // Sync editContent as well
-
-      // Optionally, exit edit mode after saving
-      // isEditing.value = false;
-      // destroyEditor();
-
-      setTimeout(() => {
-        saveMessage.value = ''
-      }, 3000)
-    } else {
-      // If save failed, keep editor open with current content
-    }
-  } catch (err) {
-    saveSuccess.value = false
-    saveMessage.value = err instanceof Error ? err.message : '保存失败，请重试'
-    console.error('Error saving blog content:', err)
-  } finally {
-    isSaving.value = false
-  }
+  router.push({
+    name: 'blog-edit-standalone',
+    params: { year, month, day, filename },
+  })
 }
+
+// 移除了 saveBlogContent
 
 onMounted(() => {
   fetchBlog()
 })
 
-onBeforeUnmount(() => {
-  destroyEditor()
-})
+// 移除了 onBeforeUnmount
 
 watch(
   () => route.params,
-  (newParams, oldParams) => {
-    if (newParams.filename && newParams.filename !== oldParams.filename) {
-      if (isEditing.value) {
-        // If editing, ask before discarding changes or save them
-        if (editContent.value !== originalContent.value) {
-          if (confirm('您有未保存的更改，切换博客将丢失这些更改。确定要切换吗？')) {
-            isEditing.value = false
-            destroyEditor()
-            fetchBlog() // Fetch new blog post
-          } else {
-            // User chose not to switch, potentially revert route or do nothing
-            // This part might need more sophisticated route guard logic depending on UX requirements
-            return
-          }
-        } else {
-          isEditing.value = false
-          destroyEditor()
-          fetchBlog()
-        }
-      } else {
-        fetchBlog() // If not editing, just fetch the new blog
-      }
+  (newParams: RouteParams, oldParams: RouteParams) => {
+    // 确保 filename 存在且发生变化, 或者其他关键参数发生变化
+    const newKey = `${newParams.year}-${newParams.month}-${newParams.day}-${newParams.filename}`
+    const oldKey = `${oldParams.year}-${oldParams.month}-${oldParams.day}-${oldParams.filename}`
+    if (newParams.filename && newKey !== oldKey) {
+      fetchBlog()
     }
   },
-  { deep: true }, // Watch route params deeply if they are objects
+  { deep: true },
 )
 </script>
 

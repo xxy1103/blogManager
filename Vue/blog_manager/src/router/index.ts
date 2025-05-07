@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 // 移除了 HomeView 的导入
 import BlogListView from '../views/BlogListView.vue'
 import BlogDetailView from '../views/BlogDetailView.vue'
+import BlogEditStandaloneView from '../views/BlogEditStandaloneView.vue' // 新增导入
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,6 +31,13 @@ const router = createRouter({
       name: 'blog-detail',
       component: BlogDetailView,
       props: true, // 将路由参数作为 props 传递给组件
+    },
+    {
+      // 新增的编辑路由
+      path: '/blog/:year/:month/:day/:filename/edit',
+      name: 'blog-edit-standalone',
+      component: BlogEditStandaloneView,
+      props: true,
     },
   ],
 })
