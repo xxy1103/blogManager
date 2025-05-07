@@ -3,9 +3,22 @@
     <div v-if="loading" class="loading">正在加载博客内容...</div>
     <div v-if="error" class="error">{{ error }}</div>
 
+    <!-- 删除确认对话框 -->
+    <div v-if="showDeleteConfirm" class="delete-confirm-overlay">
+      <div class="delete-confirm-dialog">
+        <h3>确认删除</h3>
+        <p>您确定要删除博客 "{{ blog?.title }}" 吗？此操作无法撤销。</p>
+        <div class="dialog-actions">
+          <button @click="cancelDelete" class="btn cancel-btn">取消</button>
+          <button @click="executeDelete" class="btn delete-btn">确认删除</button>
+        </div>
+      </div>
+    </div>
+
     <article v-if="blog" class="blog-content">
       <div class="blog-actions">
         <button @click="navigateToEditPage" class="btn">编辑博客</button>
+        <button @click="confirmDelete" class="btn delete-btn">删除博客</button>
       </div>
 
       <h1>{{ blog.title }}</h1>
@@ -30,7 +43,7 @@
 // 导入 watch 和 RouteParams 类型
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter, type RouteParams } from 'vue-router'
-import { getBlogDetail } from '@/services/blogService'
+import { getBlogDetail, deleteBlog } from '@/services/blogService'
 import type { BlogDetail } from '@/types/blog'
 import { marked } from 'marked'
 
@@ -40,14 +53,13 @@ const router = useRouter()
 const blog = ref<BlogDetail | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
-
-// 移除了所有与内联编辑相关的 ref 和变量
+const showDeleteConfirm = ref(false)
+const deleteInProgress = ref(false)
+const deleteMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null)
 
 const renderedContent = computed(() => {
   return blog.value ? marked(blog.value.content) : ''
 })
-
-// 移除了 initEditor, destroyEditor
 
 const fetchBlog = async () => {
   loading.value = true
@@ -110,13 +122,62 @@ const navigateToEditPage = () => {
   })
 }
 
-// 移除了 saveBlogContent
+// 删除博客相关函数
+const confirmDelete = () => {
+  showDeleteConfirm.value = true
+}
+
+const cancelDelete = () => {
+  showDeleteConfirm.value = false
+}
+
+const executeDelete = async () => {
+  if (!blog.value || deleteInProgress.value) return
+
+  deleteInProgress.value = true
+  const { year, month, day, filename } = route.params
+
+  try {
+    if (
+      Array.isArray(year) ||
+      Array.isArray(month) ||
+      Array.isArray(day) ||
+      Array.isArray(filename)
+    ) {
+      throw new Error('无效的博客参数')
+    }
+
+    const result = await deleteBlog(
+      year as string,
+      month as string,
+      day as string,
+      filename as string,
+    )
+
+    if (result.success) {
+      deleteMessage.value = { type: 'success', text: result.message }
+      // 删除成功后导航回博客列表页面
+      setTimeout(() => {
+        router.push({ path: '/blogs' })
+      }, 1500)
+    } else {
+      deleteMessage.value = { type: 'error', text: result.message }
+      showDeleteConfirm.value = false
+    }
+  } catch (err) {
+    deleteMessage.value = {
+      type: 'error',
+      text: err instanceof Error ? err.message : '删除博客时发生错误',
+    }
+    showDeleteConfirm.value = false
+  } finally {
+    deleteInProgress.value = false
+  }
+}
 
 onMounted(() => {
   fetchBlog()
 })
-
-// 移除了 onBeforeUnmount
 
 watch(
   () => route.params,
@@ -343,6 +404,57 @@ watch(
 .editor-loading,
 .edit-tips {
   display: none;
+}
+
+/* 删除确认对话框样式 */
+.delete-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirm-dialog {
+  width: 90%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.delete-confirm-dialog h3 {
+  margin-top: 0;
+  color: #d9534f;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.delete-btn {
+  background-color: #d9534f; /* Bootstrap danger color */
+}
+
+.delete-btn:hover {
+  background-color: #c9302c; /* Darker red */
+}
+
+.cancel-btn {
+  background-color: #95a5a6; /* Gray */
+}
+
+.cancel-btn:hover {
+  background-color: #7f8c8d;
 }
 </style>
 <style>

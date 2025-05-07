@@ -125,3 +125,35 @@ export async function addBlog(
     }
   }
 }
+
+export async function deleteBlog(
+  year: string,
+  month: string,
+  day: string,
+  filename: string,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    // URL 编码文件名以处理特殊字符
+    const encodedFilename = encodeURIComponent(filename)
+    const response = await fetch(
+      `${API_BASE_URL}/blogs/${year}/${month}/${day}/${encodedFilename}/delete/`,
+    )
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+
+    const result: ApiResponse<null> = await response.json()
+    if (result.status === 0) {
+      return { success: true, message: '删除博客成功' }
+    } else {
+      console.error('Error deleting blog:', result.error)
+      return { success: false, message: result.error || '删除博客失败' }
+    }
+  } catch (error) {
+    console.error('Failed to delete blog:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : '删除博客失败',
+    }
+  }
+}

@@ -2,9 +2,7 @@
   <div class="blog-list-view">
     <div class="header-container">
       <h1>我的博客</h1>
-      <router-link to="/blog/add" class="add-blog-btn">
-        <span>+</span> 创建新博客
-      </router-link>
+      <router-link to="/blog/add" class="add-blog-btn"> <span>+</span> 创建新博客 </router-link>
     </div>
     <div v-if="loading" class="loading">正在加载...</div>
     <div v-if="error" class="error">{{ error }}</div>
