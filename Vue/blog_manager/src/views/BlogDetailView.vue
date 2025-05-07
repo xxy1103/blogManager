@@ -9,7 +9,7 @@
     <article v-if="blog" class="blog-content">
       <div class="blog-actions">
         <button @click="toggleEditMode" class="btn">
-          {{ isEditing ? '取消编辑' : '编辑博客' }}
+          {{ isEditing ? '退出编辑' : '编辑博客' }}
         </button>
         <button v-if="isEditing" @click="saveBlogContent" class="btn save-btn" :disabled="isSaving">
           {{ isSaving ? '保存中...' : '保存更改' }}
@@ -25,17 +25,13 @@
       <div class="saying"><strong>摘要：</strong> {{ blog.saying }}</div>
       <hr />
 
-      <!-- 编辑模式：显示文本编辑区 -->
+      <!-- 编辑模式：显示 Toast UI Editor -->
       <div v-if="isEditing" class="edit-content">
-        <textarea
-          v-model="editContent"
-          class="content-editor"
-          placeholder="在此编辑博客内容..."
-        ></textarea>
+        <div ref="editorRefElement"></div>
       </div>
 
-      <!-- 预览模式：显示渲染后的 HTML -->
-      <div v-else v-html="blog.content" class="content-html"></div>
+      <!-- 非编辑模式：显示渲染后的 HTML -->
+      <div v-else v-html="renderedContent" class="content-html"></div>
     </article>
 
     <div v-if="!loading && !blog && !error" class="not-found">博客未找到。</div>
@@ -44,22 +40,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, nextTick, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBlogDetail, updateBlogContent } from '@/services/blogService'
 import type { BlogDetail } from '@/types/blog'
 import { marked } from 'marked' // 用于将 Markdown 转换为 HTML
+import Editor from '@toast-ui/editor'
+import '@toast-ui/editor/dist/toastui-editor.css' // Editor's Style
 
 const route = useRoute()
 const blog = ref<BlogDetail | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const isEditing = ref(false)
-const editContent = ref('')
+const editContent = ref('') // This will hold the markdown content from the editor
 const originalContent = ref('') // 存储原始的 Markdown 内容
 const isSaving = ref(false)
 const saveMessage = ref('')
 const saveSuccess = ref(false)
+
+const editorRefElement = ref<HTMLElement | null>(null)
+let editorInstance: Editor | null = null
+
+// 计算属性：渲染的HTML内容 (用于非编辑模式)
+const renderedContent = computed(() => {
+  // When not editing, blog.value.content is assumed to be the raw Markdown.
+  return blog.value ? marked(blog.value.content) : ''
+})
+
+const initEditor = () => {
+  if (editorRefElement.value && !editorInstance) {
+    editorInstance = new Editor({
+      el: editorRefElement.value,
+      height: '500px',
+      initialEditType: 'markdown', // Or 'wysiwyg'
+      previewStyle: 'vertical', // Or 'tab'
+      initialValue: editContent.value, // Use editContent which holds the raw markdown
+      events: {
+        change: () => {
+          if (editorInstance) {
+            editContent.value = editorInstance.getMarkdown()
+          }
+        },
+      },
+    })
+  }
+}
+
+const destroyEditor = () => {
+  if (editorInstance) {
+    editorInstance.destroy()
+    editorInstance = null
+  }
+}
 
 const fetchBlog = async () => {
   loading.value = true
@@ -79,7 +112,6 @@ const fetchBlog = async () => {
   }
 
   try {
-    // 确保使用正确的文件名 (它已在 route 处理中自动解码)
     const fetchedBlog = await getBlogDetail(
       year as string,
       month as string,
@@ -87,14 +119,14 @@ const fetchBlog = async () => {
       filename as string,
     )
     if (fetchedBlog) {
-      // 保存原始 Markdown 内容用于编辑
-      originalContent.value = fetchedBlog.content
-      editContent.value = fetchedBlog.content
+      originalContent.value = fetchedBlog.content // Store raw Markdown
+      editContent.value = fetchedBlog.content // Set initial edit content to raw Markdown
+      blog.value = { ...fetchedBlog } // Store the fetched blog details
 
-      // 渲染HTML用于显示
-      blog.value = {
-        ...fetchedBlog,
-        content: marked(fetchedBlog.content) as string, // 转换 Markdown 为 HTML
+      // If already in editing mode when blog is fetched (e.g., on route change while editing),
+      // update the editor content.
+      if (isEditing.value && editorInstance) {
+        editorInstance.setMarkdown(editContent.value)
       }
     } else {
       error.value = '博客加载失败或未找到。'
@@ -106,8 +138,9 @@ const fetchBlog = async () => {
       error.value = '加载博客详情失败，请稍后再试。'
     }
     console.error(err)
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 const formatDate = (dateString: string) => {
@@ -121,19 +154,32 @@ const formatDate = (dateString: string) => {
   })
 }
 
-// 切换编辑模式
-const toggleEditMode = () => {
-  if (isEditing.value) {
-    // 退出编辑模式，恢复初始内容
-    editContent.value = originalContent.value
-  }
+const toggleEditMode = async () => {
   isEditing.value = !isEditing.value
   saveMessage.value = ''
+
+  if (isEditing.value) {
+    // Entering edit mode
+    editContent.value = originalContent.value // Ensure editor starts with original content
+    await nextTick() // Wait for DOM update (editorRefElement to be available)
+    initEditor()
+  } else {
+    // Exiting edit mode
+    if (editContent.value !== originalContent.value) {
+      if (!confirm('您有未保存的更改，确定要放弃吗？')) {
+        isEditing.value = true // Revert to editing mode if user cancels
+        return
+      }
+    }
+    editContent.value = originalContent.value // Reset editContent to original
+    destroyEditor()
+  }
 }
 
-// 保存博客内容
 const saveBlogContent = async () => {
-  if (!blog.value) return
+  if (!blog.value || !editorInstance) return
+
+  const currentMarkdown = editorInstance.getMarkdown() // Get content from editor
 
   const { year, month, day, filename } = route.params
   if (
@@ -155,24 +201,28 @@ const saveBlogContent = async () => {
       month as string,
       day as string,
       filename as string,
-      editContent.value,
+      currentMarkdown, // Save the markdown from the editor
     )
 
     saveSuccess.value = result.success
     saveMessage.value = result.message
 
     if (result.success) {
-      // 更新成功，更新原始内容并渲染新的HTML
-      originalContent.value = editContent.value
-      blog.value.content = marked(editContent.value) as string
+      originalContent.value = currentMarkdown
+      if (blog.value) {
+        blog.value.content = currentMarkdown // Update the blog's content with the new markdown
+      }
+      editContent.value = currentMarkdown // Sync editContent as well
 
-      // 3秒后自动关闭编辑模式
+      // Optionally, exit edit mode after saving
+      // isEditing.value = false;
+      // destroyEditor();
+
       setTimeout(() => {
-        if (isEditing.value) {
-          isEditing.value = false
-          saveMessage.value = ''
-        }
+        saveMessage.value = ''
       }, 3000)
+    } else {
+      // If save failed, keep editor open with current content
     }
   } catch (err) {
     saveSuccess.value = false
@@ -187,16 +237,37 @@ onMounted(() => {
   fetchBlog()
 })
 
-// 如果路由参数变化，重新加载博客
+onBeforeUnmount(() => {
+  destroyEditor()
+})
+
 watch(
   () => route.params,
   (newParams, oldParams) => {
     if (newParams.filename && newParams.filename !== oldParams.filename) {
-      // 退出编辑模式并重新加载博客
-      isEditing.value = false
-      fetchBlog()
+      if (isEditing.value) {
+        // If editing, ask before discarding changes or save them
+        if (editContent.value !== originalContent.value) {
+          if (confirm('您有未保存的更改，切换博客将丢失这些更改。确定要切换吗？')) {
+            isEditing.value = false
+            destroyEditor()
+            fetchBlog() // Fetch new blog post
+          } else {
+            // User chose not to switch, potentially revert route or do nothing
+            // This part might need more sophisticated route guard logic depending on UX requirements
+            return
+          }
+        } else {
+          isEditing.value = false
+          destroyEditor()
+          fetchBlog()
+        }
+      } else {
+        fetchBlog() // If not editing, just fetch the new blog
+      }
     }
   },
+  { deep: true }, // Watch route params deeply if they are objects
 )
 </script>
 
@@ -256,7 +327,6 @@ watch(
   color: #444;
 }
 
-/* Add some basic styling for HTML elements that might come from Markdown */
 .content-html ::v-deep(h2) {
   font-size: 1.8em;
   margin-top: 30px;
@@ -338,7 +408,6 @@ watch(
   background-color: #4cae4c;
 }
 
-/* 编辑相关样式 */
 .blog-actions {
   display: flex;
   justify-content: flex-end;
@@ -374,16 +443,10 @@ watch(
   background-color: #4cae4c;
 }
 
-.content-editor {
+.edit-content {
   width: 100%;
-  min-height: 400px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: vertical;
+  margin-bottom: 20px;
+  /* Ensure editor has enough space */
 }
 
 .save-message {
@@ -413,5 +476,21 @@ watch(
   to {
     opacity: 1;
   }
+}
+
+/* Remove editor-loading and edit-tips if not used by ToastUI or reimplement if needed */
+.editor-loading,
+.edit-tips {
+  display: none;
+}
+</style>
+<style>
+/* Global styles for Toast UI Editor if needed, e.g., z-index */
+.toastui-editor-defaultUI {
+  width: 100%;
+  z-index: 100; /* Adjust if necessary */
+}
+.toastui-editor-popup {
+  z-index: 101; /* Ensure popups are above the editor */
 }
 </style>
