@@ -58,7 +58,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
      */
     public Blog() {}
     
-    public Blog(
+    public Blog(    //创建blog时使用
         String title,
         String categories,
         String[] tags,
@@ -72,7 +72,8 @@ public class Blog implements Comparable<Blog>,Cloneable {
             this.filename = title+this.dateTime.format(formatterPrint)+".md"; // 默认文件名
             this.filepath = null;           
         }
-    public Blog(
+    public Blog(    //查询blog时使用
+        String filename,
         String title,
         String categories,
         String[] tags,
@@ -84,7 +85,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
             this.saying = saying;
             this.dateTime = dateTime; // 默认当前时间
             this.content = null; // 默认内容为空
-            this.filename = null; // 默认文件名
+            this.filename = filename; // 默认文件名
             this.filepath = null;           
         }
     /**
@@ -93,7 +94,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
      * @param fileContent 文件的完整字符串内容。
      * @throws IllegalArgumentException 如果文件格式不正确（缺少分隔符等）。
      */
-    public Blog(String fileContent,Path path) {
+    public Blog(String fileContent,Path path) {     // 解析文件时使用
         this.filepath = path;
         this.filename = path.getFileName().toString(); // 获取文件名
         // --- 解析 Front-matter 部分 (YAML) ---

@@ -157,3 +157,41 @@ export async function deleteBlog(
     }
   }
 }
+
+export async function updateBlogInfo(
+  year: string,
+  month: string,
+  day: string,
+  filename: string,
+  title: string,
+  categories: string,
+  tags: string[],
+  saying: string,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    // URL 编码文件名以处理特殊字符
+    const encodedFilename = encodeURIComponent(filename)
+    const tagsParams = tags.map((tag) => `tags=${encodeURIComponent(tag)}`).join('&')
+
+    const url = `${API_BASE_URL}/blogs/${year}/${month}/${day}/${encodedFilename}/updateinfo?title=${encodeURIComponent(title)}&categories=${encodeURIComponent(categories)}&${tagsParams}&saying=${encodeURIComponent(saying)}`
+
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+
+    const result: ApiResponse<null> = await response.json()
+    if (result.status === 0) {
+      return { success: true, message: '更新博客信息成功' }
+    } else {
+      console.error('Error updating blog info:', result.error)
+      return { success: false, message: result.error || '更新博客信息失败' }
+    }
+  } catch (error) {
+    console.error('Failed to update blog info:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : '更新博客信息失败',
+    }
+  }
+}

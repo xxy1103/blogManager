@@ -145,7 +145,7 @@ public class BlogController {
             this.blogList = blogFileService.listPostFilenames(); // 调用 Service 层方法
         }
         LocalDateTime dateTime = LocalDateTime.of(year, month, day, 0, 0, 0);
-        Blog tmpblog =  new Blog(title, categories, tags, saying,dateTime);
+        Blog tmpblog =  new Blog(filename,title, categories, tags, saying,dateTime);
         Blog blog = searchBydata(tmpblog); // 调用搜索方法
         if(blog == null) {
             logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
@@ -154,6 +154,11 @@ public class BlogController {
         logger.debug("找到博客：{}", blog.getFilename());
         try {
             blogFileService.updateBlogInfo(blog, tmpblog); // 调用 Service 层方法
+            blog.setCategories(categories); // 更新博客对象的分类
+            blog.setTags(tags); // 更新博客对象的标签
+            blog.setSaying(saying); // 更新博客对象的谚语
+            blog.setTitle(title); // 更新博客对象的标题
+            
             return new Message(0, null, "更新博客成功"); // 返回成功信息
         } catch (Exception e) {
             logger.error("更新博客失败：{}", e.getMessage());
