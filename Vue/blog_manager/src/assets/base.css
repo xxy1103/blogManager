@@ -1,53 +1,77 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* 白色主题配色方案 */
 :root {
   --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --vt-c-white-soft: #f9f9f9;
+  --vt-c-white-mute: #f5f5f5;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --vt-c-black: #333333;
+  --vt-c-black-soft: #444444;
+  --vt-c-black-mute: #666666;
 
-  --vt-c-indigo: #2c3e50;
+  --vt-c-primary: #4a6baf; /* 主色调：柔和的蓝色 */
+  --vt-c-primary-light: #7991c8;
+  --vt-c-primary-dark: #365088;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  --vt-c-accent: #5e9f8c; /* 强调色：柔和的绿松石色 */
+  --vt-c-accent-light: #7fb5a5;
+  --vt-c-accent-dark: #458473;
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
+  --vt-c-gray: #f0f0f0; /* 背景色：浅灰色 */
+  --vt-c-gray-light: #f8f8f8;
+  --vt-c-gray-dark: #e0e0e0;
+
+  --vt-c-divider-light-1: rgba(60, 60, 60, 0.15);
+  --vt-c-divider-light-2: rgba(60, 60, 60, 0.08);
+  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.45);
+  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.25);
+
+  --vt-c-text-light-1: #333333;
+  --vt-c-text-light-2: #666666;
   --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --vt-c-text-dark-2: rgba(235, 235, 235, 0.75);
 }
 
 /* semantic color variables for this project */
 :root {
+  /* 基础背景色 */
   --color-background: var(--vt-c-white);
   --color-background-soft: var(--vt-c-white-soft);
   --color-background-mute: var(--vt-c-white-mute);
 
+  /* 卡片和组件背景 */
+  --color-card-bg: var(--vt-c-white);
+  --color-component-bg: var(--vt-c-gray-light);
+
+  /* 边框颜色 */
   --color-border: var(--vt-c-divider-light-2);
   --color-border-hover: var(--vt-c-divider-light-1);
 
+  /* 文本颜色 */
   --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
+  --color-text: var(--vt-c-text-light-2);
+  --color-text-muted: var(--vt-c-black-mute);
 
+  /* 主色和强调色 */
+  --color-primary: var(--vt-c-primary);
+  --color-primary-light: var(--vt-c-primary-light);
+  --color-primary-dark: var(--vt-c-primary-dark);
+
+  --color-accent: var(--vt-c-accent);
+  --color-accent-light: var(--vt-c-accent-light);
+  --color-accent-dark: var(--vt-c-accent-dark);
+
+  /* 状态颜色 */
+  --color-success: #60a678;
+  --color-warning: #e0a653;
+  --color-error: #d75b5b;
+  --color-info: #64a0d0;
+
+  /* 其他 */
   --section-gap: 160px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+  --border-radius: 8px;
+  --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --box-shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --transition-default: all 0.3s ease;
 }
 
 *,

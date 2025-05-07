@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+// 移除了 HomeView 的导入
+import BlogListView from '../views/BlogListView.vue'
+import BlogDetailView from '../views/BlogDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,7 +9,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: BlogListView, // 修改为直接使用博客列表页面作为首页
     },
     {
       path: '/about',
@@ -16,6 +18,18 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
+    },
+    // 注意：博客列表路由已经移至首页，但保留此路由作为别名
+    {
+      path: '/blogs',
+      name: 'blog-list',
+      component: BlogListView,
+    },
+    {
+      path: '/blog/:year/:month/:day/:filename',
+      name: 'blog-detail',
+      component: BlogDetailView,
+      props: true, // 将路由参数作为 props 传递给组件
     },
   ],
 })
