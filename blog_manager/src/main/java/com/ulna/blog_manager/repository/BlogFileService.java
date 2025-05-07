@@ -268,6 +268,39 @@ public class BlogFileService {
             }
             return false; // 返回失败状态
         }
+    }
 
+    public boolean updateBlogContent(Blog blog,String content) {
+        Blog blogClone = null;
+        try {
+            blogClone = blog.clone(); // 克隆一个新的对象
+            blogClone.setContent(content); // 设置新的内容
+        } catch (Exception e) {
+            blogClone = new Blog();
+            blogClone.setTitle(blog.getTitle());
+            blogClone.setCategories(blog.getCategories());
+            blogClone.setTags(blog.getTags());
+            blogClone.setSaying(blog.getSaying());
+            blogClone.setDate(blog.getDate());
+            blogClone.setFilename(blog.getFilename());
+            blogClone.setFilepath(blog.getFilepath());
+            blogClone.setContent(blog.loadContent()); // 加载博客内容
+        }
+        try {
+            deleteBlog(blog); // 删除旧博客
+            savePost(blogClone); // 保存新博客
+            return true; // 返回成功状态    
+        } catch (IOException e) {
+            logger.error("更新博客内容失败: {}", e.getMessage());
+            try{
+                Blog tmpOBlog = blog.clone(); 
+                tmpOBlog.setContent(blogClone.getContent());
+                savePost(tmpOBlog);
+            }
+            catch(Exception ee){
+                return false;
+            }
+            return false; // 返回失败状态
+        }
     }
 }
