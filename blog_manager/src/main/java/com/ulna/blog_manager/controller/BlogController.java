@@ -21,6 +21,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Collections;
+import org.springframework.web.bind.annotation.PostMapping;
+
 
 
 @RestController // 标记为 REST 控制器，方法返回值直接作为响应体 (通常是 JSON)
@@ -34,6 +36,43 @@ public class BlogController {
     @Autowired // 自动注入 BlogFileService 实例
     public BlogController(BlogFileService blogFileService) {
         this.blogFileService = blogFileService; // 初始化成员变量
+    }
+
+    /*
+     * 搜索博客
+     * @param tmpblog 临时博客对象，包含搜索条件
+     * @return 返回搜索结果的博客对象
+     */
+    public Blog searchBydata(Blog tmpblog) {
+        int index = Collections.binarySearch(this.blogList, tmpblog);
+        Blog blog = null; // 声明博客对象
+        if (index >= 0) {
+            blog = this.blogList.get(index);
+            logger.debug("找到博客：{}", blog.getFilename());
+        } 
+        int insertionPoint = -(index + 1);
+        Blog nextBlog = null; // Declare nextBlog outside the loop and initialize
+        do {
+            insertionPoint--;
+            // Boundary check for insertionPoint to prevent IndexOutOfBoundsException
+            if (insertionPoint < 0 || insertionPoint >= this.blogList.size()) {
+                break; // Exit loop if insertionPoint is out of bounds
+            }
+            nextBlog = this.blogList.get(insertionPoint); // Assign to the outer-scoped variable
+            if (nextBlog.equals(tmpblog)) {
+                logger.debug("找到博客：{}", nextBlog.getFilename());
+                blog = nextBlog; // 如果找到匹配的博客，赋值给 blog
+                break; // 找到匹配的博客，退出循环
+            }
+        } while (tmpblog.getDate().toLocalDate().equals(nextBlog.getDate().toLocalDate()));
+
+        if(blog == null) {
+            logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", tmpblog.getFilename(), tmpblog.getDate().getYear(), tmpblog.getDate().getMonthValue(), tmpblog.getDate().getDayOfMonth());
+            return null; // 返回 null 或者可以抛出异常
+        }
+        
+        return blog; // 返回博客对象
+        
     }
 
     @GetMapping("/lists") // 处理 GET 请求，路径为 /api/blogs/lists
@@ -64,47 +103,30 @@ public class BlogController {
         Blog tmpblog =  new Blog();
         tmpblog.setDate(dateTime);
         tmpblog.setFilename(filename); // 设置临时博客对象的日期和标题
-        int index = Collections.binarySearch(this.blogList, tmpblog);
-        if (index >= 0) {
-            Blog blog = this.blogList.get(index);
-            logger.debug("找到博客：{}", blog.getFilename());
-            try {
-                tmpblog = blog.clone(); // 克隆博客对象
-            } catch (Exception e) {
-                logger.error("克隆博客失败：{}", e.getMessage());
-                return new Message(1, null, "克隆博客失败"); // 返回错误信息
-            }
-            tmpblog.setContent(blog.loadContent()); // 加载博客内容
-            return new Message(0,tmpblog,null) ; // 返回找到的博客对象
-        } 
-        int insertionPoint = -(index + 1);
-        Blog nextBlog = null; // Declare nextBlog outside the loop and initialize
-        do {
-            insertionPoint--;
-            // Boundary check for insertionPoint to prevent IndexOutOfBoundsException
-            if (insertionPoint < 0 || insertionPoint >= this.blogList.size()) {
-                break; // Exit loop if insertionPoint is out of bounds
-            }
-            nextBlog = this.blogList.get(insertionPoint); // Assign to the outer-scoped variable
-            if (nextBlog.equals(tmpblog)) {
-                logger.debug("找到博客：{}", nextBlog.getFilename());
-                
-                try {
-                    tmpblog = nextBlog.clone(); // Clone the nextBlog object
-                    tmpblog.loadContent(); // Load the content of the next blog    
-                } catch (Exception e) {
-                    logger.error("加载博客内容失败：{}", e.getMessage());
-                    return new Message(1, null, "加载博客内容失败"); // 返回错误信息
-                }
-                tmpblog.setContent(nextBlog.loadContent());
-                //System.out.println(tmpblog.getContent());
-                
-                return new Message(0,tmpblog,null) ; // 返回找到的博客对象
-            }
-        } while (dateTime.toLocalDate().equals(nextBlog.getDate().toLocalDate()));
-        logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
-        //return null; // 返回 null 或者可以抛出异常
-        return new Message(1, null, "未找到博客"); // 返回错误信息
+        Blog blog = searchBydata(tmpblog); // 调用搜索方法
+        if(blog == null) {
+            logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
+            return new Message(1, null, "未找到博客"); // 返回错误信息
+        }
+        Blog blogClone = null; // 声明博客克隆对象
+        try{
+            blogClone =  blog.clone(); // 返回博客对象的克隆，避免直接修改原对象
+            blogClone.setContent(blog.loadContent());
+        } catch (CloneNotSupportedException e) {
+            //fallback to return the original object
+            logger.error("克隆博客失败：{}", e.getMessage());
+            blogClone = new Blog();
+            blogClone.setTitle(blog.getTitle());
+            blogClone.setCategories(blog.getCategories());
+            blogClone.setTags(blog.getTags());
+            blogClone.setSaying(blog.getSaying());
+            blogClone.setDate(blog.getDate());
+            blogClone.setFilename(blog.getFilename());
+            blogClone.setFilepath(blog.getFilepath());
+            blogClone.setContent(blog.loadContent()); // 加载博客内容
+        }
+        logger.debug("找到博客：{}", blogClone.getFilename());
+        return new Message(0, blogClone, null); // 返回博客对象的克隆，避免直接修改原对象
     }
 
     @GetMapping("/{year}/{month}/{day}/{filename}/updateinfo") // 处理 GET 请求，路径为 /api/blogs/update
@@ -124,43 +146,59 @@ public class BlogController {
         }
         LocalDateTime dateTime = LocalDateTime.of(year, month, day, 0, 0, 0);
         Blog tmpblog =  new Blog(title, categories, tags, saying,dateTime);
-        int index = Collections.binarySearch(this.blogList, tmpblog);
-        if (index >= 0) {
-            Blog blog = this.blogList.get(index);
-            logger.debug("找到博客：{}", blog.getFilename());
-            try {
-                blogFileService.updateBlogInfo(blog, tmpblog);
-                //return true; // 返回成功状态
-                return new Message(0, null, "更新博客成功"); // 返回成功信息
-            } catch (Exception e) {
-                logger.error("更新博客失败：{}", e.getMessage());
-                return new Message(1, null, "更新博客失败"); // 返回错误信息
-                //return false; // 返回失败状态
-            }
+        Blog blog = searchBydata(tmpblog); // 调用搜索方法
+        if(blog == null) {
+            logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
+            return new Message(1, null, "未找到博客"); // 返回错误信息
         }
-        int insertionPoint = -(index + 1);
-        Blog nextBlog = null; // Declare nextBlog outside the loop and initialize
-        do {
-            insertionPoint--;
-            // Boundary check for insertionPoint to prevent IndexOutOfBoundsException
-            if (insertionPoint < 0 || insertionPoint >= this.blogList.size()) {
-                break; // Exit loop if insertionPoint is out of bounds
-            }
-            nextBlog = this.blogList.get(insertionPoint); // Assign to the outer-scoped variable
-            if (nextBlog.equals(tmpblog)) {
-                logger.debug("找到博客：{}", nextBlog.getFilename());
-                try {
-                    blogFileService.updateBlogInfo(nextBlog, tmpblog); // 调用 Service 层方法
-                    return new Message(0, null, "更新博客成功"); // 返回成功信息
-                } catch (Exception e) {
-                    logger.error("更新博客失败：{}", e.getMessage());
-                    return new Message(1, null, "更新博客失败"); // 返回错误信息
-                }
-            }
-        } while (dateTime.toLocalDate().equals(nextBlog.getDate().toLocalDate()));
-        logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
-        return new Message(1, null, "未找到博客"); // 返回错误信息
+        logger.debug("找到博客：{}", blog.getFilename());
+        try {
+            blogFileService.updateBlogInfo(blog, tmpblog); // 调用 Service 层方法
+            return new Message(0, null, "更新博客成功"); // 返回成功信息
+        } catch (Exception e) {
+            logger.error("更新博客失败：{}", e.getMessage());
+            return new Message(1, null, "更新博客失败"); // 返回错误信息
+        }
     }
+
+    @PostMapping("/{year}/{month}/{day}/{filename}/updatecontent") // 处理 POST 请求，路径为 /api/blogs/updatecontent
+    public Message updateBlogContent(
+        @PathVariable int year,
+        @PathVariable int month,
+        @PathVariable int day,
+        @PathVariable String filename,
+        @RequestBody String content // 获取请求体中的内容
+    ){
+        logger.info("接收到请求：更新博客内容，文件名为 {}", filename);
+        if(this.blogList == null) {
+            this.blogList = blogFileService.listPostFilenames(); // 调用 Service 层方法
+        }
+        LocalDateTime dateTime = LocalDateTime.of(year, month, day, 0, 0, 0);
+        Blog tmpblog =  new Blog();
+        tmpblog.setDate(dateTime);
+        tmpblog.setFilename(filename); // 设置临时博客对象的日期和标题
+        Blog blog = searchBydata(tmpblog); // 调用搜索方法
+        if(blog == null) {
+            logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
+            return new Message(1, null, "未找到博客"); // 返回错误信息
+        }
+        logger.debug("找到博客：{}", blog.getFilename());
+        try {
+            blogFileService.updateBlogContent(blog, content); // 调用 Service 层方法
+            return new Message(0, null, "更新博客内容成功"); // 返回成功信息
+        } catch (Exception e) {
+            logger.error("更新博客内容失败：{}", e.getMessage());
+            return new Message(1, null, "更新博客内容失败"); // 返回错误信息
+        }
+    }
+    public String postMethodName(@RequestBody String entity) {
+        //TODO: process POST request
+        
+        return entity;
+    }
+    
+
+    
 
     @GetMapping("/add") // 处理 GET 请求，路径为 /api/blogs/add
     public Message addBlog(
@@ -195,45 +233,18 @@ public class BlogController {
         Blog tmpblog =  new Blog();
         tmpblog.setDate(dateTime);
         tmpblog.setFilename(filename); // 设置临时博客对象的日期和标题
-        int index = Collections.binarySearch(this.blogList, tmpblog);
-        if (index >= 0) {
-            Blog blog = this.blogList.get(index);
-            logger.debug("找到博客：{}", blog.getFilename());
-            try {
-                blogFileService.deleteBlog(blog); // 调用 Service 层方法
-                //return true; // 返回成功状态
-                return new Message(0, null, "删除博客成功"); // 返回成功信息
-            } catch (Exception e) {
-                logger.error("删除博客失败：{}", e.getMessage());
-                //return false; // 返回失败状态
-                return new Message(1, null, "删除博客失败"); // 返回错误信息
-            }
+        Blog blog = searchBydata(tmpblog); // 调用搜索方法
+        if(blog == null) {
+            logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
+            return new Message(1, null, "未找到博客"); // 返回错误信息
         }
-        int insertionPoint = -(index + 1);
-        Blog nextBlog = null; // Declare nextBlog outside the loop and initialize
-        do {
-            insertionPoint--;
-            // Boundary check for insertionPoint to prevent IndexOutOfBoundsException
-            if (insertionPoint < 0 || insertionPoint >= this.blogList.size()) {
-                break; // Exit loop if insertionPoint is out of bounds
-            }
-            nextBlog = this.blogList.get(insertionPoint); // Assign to the outer-scoped variable
-            if (nextBlog.equals(tmpblog)) {
-                logger.debug("找到博客：{}", nextBlog.getFilename());
-                try {
-                    blogFileService.deleteBlog(nextBlog); // 调用 Service 层方法
-                    //return true; // 返回成功状态
-                    return new Message(0, null, "删除博客成功"); // 返回成功信息
-                } catch (Exception e) {
-                    logger.error("删除博客失败：{}", e.getMessage());
-                    //return false; // 返回失败状态
-                    return new Message(1, null, "删除博客失败"); // 返回错误信息
-                }
-            }
-        } while (dateTime.toLocalDate().equals(nextBlog.getDate().toLocalDate()));
-        logger.warn("未找到博客：文件名为 {},日期为 {}-{}-{}", filename, year, month, day);
-        //return false; // 返回 null 或者可以抛出异常
-        return new Message(1, null, "未找到博客"); // 返回错误信息
-
+        logger.debug("找到博客：{}", blog.getFilename());
+        try {
+            blogFileService.deleteBlog(blog); // 调用 Service 层方法
+            return new Message(0, null, "删除博客成功"); // 返回成功信息
+        } catch (Exception e) {
+            logger.error("删除博客失败：{}", e.getMessage());
+            return new Message(1, null, "删除博客失败"); // 返回错误信息
+        }
     }
 }
