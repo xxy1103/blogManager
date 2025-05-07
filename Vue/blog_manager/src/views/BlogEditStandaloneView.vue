@@ -106,6 +106,25 @@ const initEditor = (content: string) => {
           if (mode === 'wysiwyg' && editorInstance) {
             // WYSIWYG 模式不需要预览，所以设置为 tab 可以隐藏预览区域
             editorInstance.changePreviewStyle('tab')
+
+            // 添加一个短暂延迟，确保DOM完全更新
+            setTimeout(() => {
+              // 查找并处理可能重复的编辑区域
+              const container = editorRefElement.value
+              if (container) {
+                // 查找所有WYSIWYG编辑器容器
+                const editors = container.querySelectorAll('.toastui-editor-ww-container')
+                // 如果找到多个，只保留第一个
+                if (editors && editors.length > 1) {
+                  for (let i = 1; i < editors.length; i++) {
+                    const el = editors[i]
+                    if (el.parentNode) {
+                      el.parentNode.removeChild(el)
+                    }
+                  }
+                }
+              }
+            }, 50)
           } else if (mode === 'markdown' && editorInstance) {
             // Markdown 模式下保持垂直分屏
             editorInstance.changePreviewStyle('vertical')
@@ -456,35 +475,43 @@ onBeforeUnmount(() => {
 /* 确保在所见即所得模式下，编辑区域占满宽度 */
 :deep(.toastui-editor-ww-container) {
   width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
 }
 
+/* WYSIWYG模式特定样式 */
 :deep(.toastui-editor.ww-mode) {
   width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 :deep(.toastui-editor.ww-mode .toastui-editor-main) {
   width: 100% !important;
+  height: 100% !important;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 :deep(.toastui-editor.ww-mode .ProseMirror) {
   width: 100% !important;
   max-width: 100% !important;
+  height: 100% !important;
   padding: 8px 16px !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
 }
 
-/* 强制遵守浏览器视口宽度，但使用 :global 而不是 :deep，以正确影响全局样式 */
-:global(body),
-:global(html) {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  overflow-x: hidden; /* 防止水平滚动 */
+/* 确保不会出现重复的编辑器实例 */
+:deep(.toastui-editor-ww-container:not(:first-child)) {
+  display: none !important;
 }
 
-/* 确保 App 根元素占满整个宽度 */
-:global(#app) {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
+/* 确保模式切换时预览区域消失 */
+:deep(.toastui-editor.ww-mode .toastui-editor-md-preview) {
+  display: none !important;
 }
 </style>
