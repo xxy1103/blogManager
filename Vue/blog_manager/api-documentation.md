@@ -56,7 +56,7 @@
 
 - **URL**: `/api/blogs/{year}/{month}/{day}/{filename}/`
 - **方法**: GET
-- **参数**: 
+- **参数**:
   - `year`: 博客发布年份
   - `month`: 博客发布月份
   - `day`: 博客发布日期
@@ -93,7 +93,7 @@
 
 - **URL**: `/api/blogs/{year}/{month}/{day}/{filename}/updateinfo`
 - **方法**: GET
-- **参数**: 
+- **参数**:
   - `year`: 博客发布年份
   - `month`: 博客发布月份
   - `day`: 博客发布日期
@@ -125,7 +125,7 @@
 
 - **URL**: `/api/blogs/{year}/{month}/{day}/{filename}/updatecontent`
 - **方法**: POST
-- **参数**: 
+- **参数**:
   - `year`: 博客发布年份
   - `month`: 博客发布月份
   - `day`: 博客发布日期
@@ -208,7 +208,7 @@
 
 根据相对路径获取图片资源，直接返回图片文件而不是JSON。
 
-- **URL**: `/api/{relativePath}`
+- **URL**: `/image/{relativePath}`
 - **方法**: GET
 - **参数**:
   - `relativePath`: 图片的相对路径，例如 "image/计算机网络第五章--网络层_20250425_151005/1745565448467.png"
@@ -218,34 +218,77 @@
   - HTTP 404 Not Found: 如果图片不存在
   - HTTP 400 Bad Request: 如果请求处理过程中出现异常
 
+### 8. 上传图片
+
+将图片上传到服务器的指定相对路径中。
+
+- **URL**: `/image/upload`
+- **方法**: POST
+- **Content-Type**: `multipart/form-data`
+- **参数**:
+  - `file`: 要上传的图片文件（表单文件字段）
+  - `relativePath`: 保存图片的相对路径，如 "计算机网络第五章--网络层_20250425_151005"
+- **成功响应**:
+  ```json
+  {
+    "success": true,
+    "message": "图片上传成功",
+    "path": "计算机网络第五章--网络层_20250425_151005/example.png"
+  }
+  ```
+- **失败响应**:
+  ```json
+  {
+    "success": false,
+    "message": "上传图片失败: 错误信息"
+  }
+  ```
+
 ## 示例
 
 ### 获取博客列表
+
 ```
 GET /api/blogs/lists
 ```
 
 ### 获取特定博客
+
 ```
 GET /api/blogs/2023/12/25/我的博客_20231225_120000.md/
 ```
 
 ### 更新博客信息
+
 ```
 GET /api/blogs/2023/12/25/我的博客_20231225_120000.md/updateinfo?title=新标题&categories=技术&tags=Java&tags=Spring&saying=这是一个摘要
 ```
 
 ### 添加新博客
+
 ```
 GET /api/blogs/add?title=新博客&categories=技术分享&tags=Java&tags=编程&saying=这是一篇关于Java的博客
 ```
 
 ### 删除博客
+
 ```
 GET /api/blogs/2023/12/25/我的博客_20231225_120000.md/delete/
 ```
 
 ### 获取图片资源
+
 ```
 GET /api/计算机网络第五章--网络层_20250425_151005/1745565448467.png
+```
+
+### 上传图片
+
+```
+POST /image/upload
+Content-Type: multipart/form-data
+
+Form fields:
+- file: [图片文件]
+- relativePath: 计算机网络第五章--网络层_20250425_151005
 ```
