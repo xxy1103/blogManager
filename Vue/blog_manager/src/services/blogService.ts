@@ -8,6 +8,34 @@ interface ApiResponse<T> {
   error: string | null
 }
 
+// Helper function to process markdown image paths for display
+export function processBlogContentForDisplay(content: string): string {
+  if (!content) return ''
+  // Regex to find markdown images like ![alt text](image/path/to/image.png)
+  // Captures: 1=altText, 2=imagePath
+  const markdownImageRegex = new RegExp('!\\[([^\\]]*)\\]\\((image/[^)]+)\\)', 'g')
+  return content.replace(markdownImageRegex, (match, altText, imagePath) => {
+    return `![${altText}](${API_BASE_URL}/${imagePath})`
+  })
+}
+
+// Helper function to revert image paths for saving
+export function revertBlogContentForSave(content: string): string {
+  if (!content) return ''
+  // Regex to find markdown images with the API base URL like ![alt text](/api/image/path/to/image.png)
+  // Captures: 1=altText, 2=fullApiPath starting with /api/
+  const apiImageRegex = new RegExp('!\\[([^\\]]*)\\]\\(((\\/api)?\\/image\\/[^)]+)\\)', 'g')
+  return content.replace(apiImageRegex, (match, altText, fullApiPath) => {
+    // Remove the API_BASE_URL part (e.g., '/api') to get the original relative path
+    const pathWithoutApiBase = fullApiPath.substring(API_BASE_URL.length)
+    // If pathWithoutApiBase is '/image/path.png', remove leading '/' to make it 'image/path.png'
+    if (pathWithoutApiBase.startsWith('/')) {
+      return `![${altText}](${pathWithoutApiBase.substring(1)})`
+    }
+    return `![${altText}](${pathWithoutApiBase})` // Fallback, though should usually have leading slash
+  })
+}
+
 export async function getAllBlogs(): Promise<BlogListItem[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/blogs/lists`)
@@ -44,6 +72,9 @@ export async function getBlogDetail(
     }
     const result: ApiResponse<BlogDetail> = await response.json()
     if (result.status === 0 && result.data) {
+      if (result.data.content) {
+        result.data.content = processBlogContentForDisplay(result.data.content)
+      }
       return result.data
     } else {
       console.error('Error fetching blog detail:', result.error)
@@ -63,6 +94,7 @@ export async function updateBlogContent(
   content: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
+    const contentToSave = revertBlogContentForSave(content)
     // URL 编码文件名以处理特殊字符
     const encodedFilename = encodeURIComponent(filename)
     const response = await fetch(
@@ -72,7 +104,7 @@ export async function updateBlogContent(
         headers: {
           'Content-Type': 'text/plain',
         },
-        body: content,
+        body: contentToSave, // Send reverted content
       },
     )
     if (!response.ok) {
@@ -100,19 +132,22 @@ export async function addBlog(
   categories: string,
   tags: string[],
   saying: string,
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string; filename?: string }> {
   try {
-    const tagsParams = tags.map((tag) => `tags=${encodeURIComponent(tag)}`).join('&')
-    const url = `${API_BASE_URL}/blogs/add?title=${encodeURIComponent(title)}&categories=${encodeURIComponent(categories)}&${tagsParams}&saying=${encodeURIComponent(saying)}`
+    const queryParams = new URLSearchParams({
+      title,
+      categories,
+      saying,
+    })
+    tags.forEach((tag) => queryParams.append('tags', tag))
 
-    const response = await fetch(url)
+    const response = await fetch(`${API_BASE_URL}/blogs/add?${queryParams.toString()}`)
     if (!response.ok) {
       throw new Error('Network response was not ok')
     }
-
-    const result: ApiResponse<null> = await response.json()
+    const result: ApiResponse<{ filename: string }> = await response.json() // Assuming API returns filename
     if (result.status === 0) {
-      return { success: true, message: '添加博客成功' }
+      return { success: true, message: '添加博客成功', filename: result.data?.filename }
     } else {
       console.error('Error adding blog:', result.error)
       return { success: false, message: result.error || '添加博客失败' }

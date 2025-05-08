@@ -88,7 +88,13 @@
 // 导入 watch 和 RouteParams 类型
 import { ref, onMounted, computed, watch, reactive } from 'vue'
 import { useRoute, useRouter, type RouteParams } from 'vue-router'
-import { getBlogDetail, deleteBlog, updateBlogInfo } from '../services/blogService.js'
+// 导入 processBlogContentForDisplay
+import {
+  getBlogDetail,
+  deleteBlog,
+  updateBlogInfo,
+  processBlogContentForDisplay,
+} from '../services/blogService.js'
 import type { BlogDetail } from '../types/blog.js'
 import { marked } from 'marked'
 
@@ -114,7 +120,11 @@ const editForm = reactive({
 })
 
 const renderedContent = computed(() => {
-  return blog.value ? marked(blog.value.content) : ''
+  if (blog.value && blog.value.content) {
+    const processedContent = processBlogContentForDisplay(blog.value.content)
+    return marked(processedContent)
+  }
+  return ''
 })
 
 const fetchBlog = async () => {
