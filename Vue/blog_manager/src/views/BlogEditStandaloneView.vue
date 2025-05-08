@@ -211,8 +211,16 @@ const goBack = () => {
   })
 }
 
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.ctrlKey && event.key === 's') {
+    event.preventDefault() // Prevent default browser save action
+    saveBlog()
+  }
+}
+
 onMounted(() => {
   fetchBlogToEdit()
+  window.addEventListener('keydown', handleKeyDown)
 })
 
 onBeforeUnmount(() => {
@@ -220,6 +228,7 @@ onBeforeUnmount(() => {
     editorInstance.destroy()
     editorInstance = null
   }
+  window.removeEventListener('keydown', handleKeyDown)
 })
 </script>
 
