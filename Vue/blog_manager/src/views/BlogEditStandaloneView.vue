@@ -29,8 +29,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getBlogDetail, updateBlogContent, uploadImage } from '../services/blogService.js' // Import uploadImage and correct path with .js extension
-import type { BlogDetail } from '@/types/blog'
+import { getBlogDetail, updateBlogContent, uploadImage } from '../services/blogService.js'
+import type { BlogDetail } from '../types/blog.js'
 import Editor from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -93,6 +93,7 @@ const fetchBlogToEdit = async () => {
 
 const initEditor = (content: string) => {
   if (editorRefElement.value && !editorInstance) {
+    // 创建编辑器实例
     editorInstance = new Editor({
       el: editorRefElement.value,
       initialValue: content,
@@ -100,6 +101,14 @@ const initEditor = (content: string) => {
       height: '100%', // Ensure editor takes full height of its container
       initialEditType: 'markdown',
       usageStatistics: false,
+      // 显式定义工具栏项目，确保它们按需显示
+      toolbarItems: [
+        ['heading', 'bold', 'italic', 'strike'],
+        ['hr', 'quote'],
+        ['ul', 'ol', 'task', 'indent', 'outdent'],
+        ['table', 'image', 'link'],
+        ['code', 'codeblock'],
+      ],
       hooks: {
         addImageBlobHook: async (blob: File, callback: (url: string, altText: string) => void) => {
           if (!blog.value) {
@@ -150,6 +159,24 @@ const initEditor = (content: string) => {
       },
     })
     initialContent.value = editorInstance.getMarkdown() // Store initial content after editor is fully initialized
+
+    // 获取编辑器DOM元素
+    const editorEl = editorRefElement.value.querySelector('.toastui-editor') as HTMLElement
+    if (editorEl) {
+      // 为编辑器添加特定的键盘事件处理，这会覆盖编辑器内部的 Ctrl+S 处理
+      editorEl.addEventListener(
+        'keydown',
+        (e) => {
+          if (e.ctrlKey && e.key === 's') {
+            e.preventDefault()
+            e.stopPropagation()
+            saveBlog()
+            return false
+          }
+        },
+        true,
+      ) // 使用捕获模式，确保我们的事件处理器先于编辑器的内部处理器执行
+    }
   }
 }
 
@@ -212,23 +239,49 @@ const goBack = () => {
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
+  // Ctrl+S 快捷键处理
   if (event.ctrlKey && event.key === 's') {
-    event.preventDefault() // Prevent default browser save action
-    saveBlog()
+    event.preventDefault() // 阻止浏览器默认保存行为
+    event.stopPropagation() // 阻止事件冒泡，防止编辑器接收到这个事件
+    saveBlog() // 调用我们自己的保存函数
+    return false // 确保不会有其他处理
   }
 }
 
 onMounted(() => {
   fetchBlogToEdit()
-  window.addEventListener('keydown', handleKeyDown)
+
+  // 添加全局键盘事件监听器
+  window.addEventListener('keydown', handleKeyDown, true) // 使用捕获模式
+
+  // 添加阻止默认Ctrl+S行为的全局处理器
+  document.addEventListener('keydown', globalKeydownHandler, true) // 使用捕获模式
 })
+
+// 保存全局事件处理函数的引用，以便日后可以移除
+const globalKeydownHandler = function (e: KeyboardEvent) {
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault()
+    e.stopPropagation()
+    return false
+  }
+}
 
 onBeforeUnmount(() => {
   if (editorInstance) {
     editorInstance.destroy()
     editorInstance = null
   }
-  window.removeEventListener('keydown', handleKeyDown)
+
+  // 移除所有添加的事件监听器
+  window.removeEventListener('keydown', handleKeyDown, true)
+  document.removeEventListener('keydown', globalKeydownHandler, true)
+
+  // 如果编辑器元素仍然存在，移除其事件监听器
+  const editorEl = editorRefElement.value?.querySelector('.toastui-editor') as HTMLElement
+  if (editorEl) {
+    editorEl.removeEventListener('keydown', handleKeyDown, true)
+  }
 })
 </script>
 
