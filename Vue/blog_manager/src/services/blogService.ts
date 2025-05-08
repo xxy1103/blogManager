@@ -15,24 +15,7 @@ export function processBlogContentForDisplay(content: string): string {
   // Captures: 1=altText, 2=imagePath
   const markdownImageRegex = new RegExp('!\\[([^\\]]*)\\]\\((image/[^)]+)\\)', 'g')
   return content.replace(markdownImageRegex, (match, altText, imagePath) => {
-    return `![${altText}](${API_BASE_URL}/${imagePath})`
-  })
-}
-
-// Helper function to revert image paths for saving
-export function revertBlogContentForSave(content: string): string {
-  if (!content) return ''
-  // Regex to find markdown images with the API base URL like ![alt text](/api/image/path/to/image.png)
-  // Captures: 1=altText, 2=fullApiPath starting with /api/
-  const apiImageRegex = new RegExp('!\\[([^\\]]*)\\]\\(((\\/api)?\\/image\\/[^)]+)\\)', 'g')
-  return content.replace(apiImageRegex, (match, altText, fullApiPath) => {
-    // Remove the API_BASE_URL part (e.g., '/api') to get the original relative path
-    const pathWithoutApiBase = fullApiPath.substring(API_BASE_URL.length)
-    // If pathWithoutApiBase is '/image/path.png', remove leading '/' to make it 'image/path.png'
-    if (pathWithoutApiBase.startsWith('/')) {
-      return `![${altText}](${pathWithoutApiBase.substring(1)})`
-    }
-    return `![${altText}](${pathWithoutApiBase})` // Fallback, though should usually have leading slash
+    return `![${altText}](/${imagePath})` // Changed API_BASE_URL to /image
   })
 }
 
@@ -94,7 +77,7 @@ export async function updateBlogContent(
   content: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const contentToSave = revertBlogContentForSave(content)
+    const contentToSave = content
     // URL 编码文件名以处理特殊字符
     const encodedFilename = encodeURIComponent(filename)
     const response = await fetch(
@@ -228,5 +211,44 @@ export async function updateBlogInfo(
       success: false,
       message: error instanceof Error ? error.message : '更新博客信息失败',
     }
+  }
+}
+
+export async function uploadImage(file: File, relativePath: string): Promise<string> {
+  const formData = new FormData()
+  // The backend API /image/upload expects 'file' and 'relativePath'
+  // The filename of the 'file' part in FormData should be the desired timestamped filename
+  formData.append('file', file)
+  formData.append('relativePath', relativePath)
+
+  try {
+    // As per API documentation, /image/upload is not prefixed with /api
+    const response = await fetch('/image/upload', {
+      method: 'POST',
+      body: formData,
+      // Headers like 'Content-Type': 'multipart/form-data' are typically set automatically by the browser for FormData
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Image upload failed: ${response.status} ${errorText}`)
+    }
+
+    const result = await response.json()
+
+    if (result.success && result.path) {
+      // result.path is expected to be "relativePathOnServer/actualFilename.ext"
+      // The markdown requires a root-relative path like "/image/relativePathOnServer/actualFilename.ext"
+      return `/image/${result.path}` // Ensure the path is root-relative
+    } else {
+      throw new Error(result.message || 'Image upload failed due to server error')
+    }
+  } catch (error) {
+    console.error('Failed to upload image:', error)
+    // Re-throw the error so it can be caught by the calling function in the Vue component
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error('An unknown error occurred during image upload')
   }
 }

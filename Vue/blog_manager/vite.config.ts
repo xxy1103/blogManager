@@ -15,9 +15,15 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5200',
+        target: 'http://localhost:5200', // 您的后端 API 地址
         changeOrigin: true,
-        secure: false,
+        // rewrite: (path) => path.replace(/^\/api/, '') // 如果后端不需要 /api 前缀
+      },
+      '/image': {
+        // <--- 确保有这个或类似的配置
+        target: 'http://localhost:5200', // 您的后端图片服务地址
+        changeOrigin: true,
+        // rewrite: (path) => path.replace(/^\/image/, '/actual/backend/image/prefix') // 如果后端图片路径需要重写
       },
     },
   },

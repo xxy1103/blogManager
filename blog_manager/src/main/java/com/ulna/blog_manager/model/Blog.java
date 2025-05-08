@@ -198,15 +198,12 @@ public class Blog implements Comparable<Blog>,Cloneable {
      * @throws RuntimeException 如果读取文件失败
      */
     public String loadContent() { 
-        if (content == null && filepath != null) {
-            try {
-                String fileContent = Files.readString(filepath);
-                extractContentFromFile(fileContent);
-            } catch (IOException e) {
-                throw new RuntimeException("无法读取博客内容: " + filepath, e);
-            }
+        try {
+            String fileContent = Files.readString(filepath);
+            return extractContentFromFile(fileContent);
+        } catch (IOException e) {
+            throw new RuntimeException("无法读取博客内容: " + filepath, e);
         }
-        return content; 
     }
     
     /**
@@ -214,9 +211,9 @@ public class Blog implements Comparable<Blog>,Cloneable {
      * 
      * @param fileContent 完整的文件内容
      */
-    private void extractContentFromFile(String fileContent) {
+    private String extractContentFromFile(String fileContent) {
         if (fileContent == null || !fileContent.startsWith(FRONT_MATTER_DELIMITER)) {
-            return;
+            return null;
         }
 
         // 查找第二个分隔符的位置
@@ -226,7 +223,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
         }
 
         if (secondDelimiterStart == -1) {
-            return;
+            return null;
         }
 
         // 提取内容部分 (分隔符之后的所有内容)
@@ -238,10 +235,10 @@ public class Blog implements Comparable<Blog>,Cloneable {
         if (moreTagIndex != -1) {
             // 标签之后的部分是 content
             String contentPart = remainingContentPart.substring(moreTagIndex + MORE_TAG.length()).trim();
-            this.content = contentPart;
+            return  contentPart;
         } else {
             // 没有找到 <!-- more --> 标签，全部作为 content
-            this.content = remainingContentPart;
+            return remainingContentPart;
         }
     }
     

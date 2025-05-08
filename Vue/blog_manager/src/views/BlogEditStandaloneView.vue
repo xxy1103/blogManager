@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getBlogDetail, updateBlogContent } from '@/services/blogService'
+import { getBlogDetail, updateBlogContent, uploadImage } from '../services/blogService.js' // Import uploadImage and correct path with .js extension
 import type { BlogDetail } from '@/types/blog'
 import Editor from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
@@ -95,62 +95,61 @@ const initEditor = (content: string) => {
   if (editorRefElement.value && !editorInstance) {
     editorInstance = new Editor({
       el: editorRefElement.value,
-      initialEditType: 'markdown', // 默认为 Markdown 模式
-      previewStyle: 'vertical', // 默认垂直分屏显示 Markdown 和预览
       initialValue: content,
-      height: '100%', // Rely on CSS for actual height via container
-      events: {
-        // 添加编辑器模式切换事件
-        changeMode: (mode: string) => {
-          // 如果是所见即所得模式，则不显示预览
-          if (mode === 'wysiwyg' && editorInstance) {
-            // WYSIWYG 模式不需要预览，所以设置为 tab 可以隐藏预览区域
-            editorInstance.changePreviewStyle('tab')
+      previewStyle: 'vertical',
+      height: '100%', // Ensure editor takes full height of its container
+      initialEditType: 'markdown',
+      usageStatistics: false,
+      hooks: {
+        addImageBlobHook: async (blob: File, callback: (url: string, altText: string) => void) => {
+          if (!blog.value) {
+            console.error('Blog context is not available for image upload.')
+            // Optionally, inform the user via UI
+            callback('error_blog_context_missing', 'Error: Blog context missing')
+            return
+          }
 
-            // 添加一个短暂延迟，确保DOM完全更新
+          // Use blog filename (without .md) as the relative path for the image directory
+          let blogFilename = route.params.filename as string
+          if (Array.isArray(blogFilename)) {
+            // Should not happen based on route setup, but good practice
+            blogFilename = blogFilename[0]
+          }
+          const relativePathForImage = blogFilename.replace(/\.md$/, '')
+
+          const timestamp = Date.now()
+          const extension = blob.name.split('.').pop() || blob.type.split('/')[1] || 'png'
+          const timestampedFilename = `${timestamp}.${extension}`
+
+          // Create a new File object with the timestamped name, as backend expects this
+          const imageFile = new File([blob], timestampedFilename, {
+            type: blob.type,
+          })
+
+          try {
+            const imageUrl = await uploadImage(imageFile, relativePathForImage)
+            // imageUrl from uploadImage is "image/relativePathForImage/timestampedFilename.ext"
+            // This is the format required for saving in markdown.
+            // The alt text can be the filename.
+            callback(imageUrl, timestampedFilename)
+          } catch (uploadError) {
+            console.error('Failed to upload image:', uploadError)
+            // Notify the user, e.g., by inserting an error message or using a toast notification
+            // For now, we'll call the callback with an error placeholder.
+            // The editor might show this as a broken image link.
+            callback('error_uploading_image', 'Error uploading image')
+            // Optionally, display a more user-friendly error message on the UI
+            saveMessage.value = `图片上传失败: ${uploadError instanceof Error ? uploadError.message : '未知错误'}`
+            saveSuccess.value = false
+            // Auto-hide message after a few seconds
             setTimeout(() => {
-              // 查找并处理可能重复的编辑区域
-              const container = editorRefElement.value
-              if (container) {
-                // 查找所有WYSIWYG编辑器容器
-                const editors = container.querySelectorAll('.toastui-editor-ww-container')
-                // 如果找到多个，只保留第一个
-                if (editors && editors.length > 1) {
-                  for (let i = 1; i < editors.length; i++) {
-                    const el = editors[i]
-                    if (el.parentNode) {
-                      el.parentNode.removeChild(el)
-                    }
-                  }
-                }
-              }
-            }, 50)
-          } else if (mode === 'markdown' && editorInstance) {
-            // Markdown 模式下保持垂直分屏
-            editorInstance.changePreviewStyle('vertical')
+              saveMessage.value = ''
+            }, 5000)
           }
         },
       },
-      // 添加额外配置，确保滚动正常工作
-      toolbarScrollSync: true,
-      hideModeSwitch: false,
     })
-
-    // 确保编辑器加载完成后，滚动功能正常
-    setTimeout(() => {
-      const editorEl = editorRefElement.value
-      if (editorEl) {
-        const scrollElements = editorEl.querySelectorAll(
-          '.toastui-editor-md-container, .toastui-editor-ww-container',
-        )
-        scrollElements.forEach((el) => {
-          // 确保这些元素可以滚动
-          if (el instanceof HTMLElement) {
-            el.style.overflow = 'auto'
-          }
-        })
-      }
-    }, 100)
+    initialContent.value = editorInstance.getMarkdown() // Store initial content after editor is fully initialized
   }
 }
 
@@ -477,7 +476,6 @@ onBeforeUnmount(() => {
   width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  position: relative !important;
 }
 
 /* WYSIWYG模式特定样式 */
