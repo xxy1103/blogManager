@@ -28,7 +28,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
     // 用于解析日期时间字符串的格式化器
     // 用于解析日期时间字符串的格式化器 - 更灵活的格式
     private static final DateTimeFormatter formatter = 
-        DateTimeFormatter.ofPattern("yyyy-M-d H:m:s");
+        DateTimeFormatter.ofPattern("yyyy-M-d HH:mm:ss");
     // 创建自定义格式的 DateTimeFormatter
     private static final DateTimeFormatter formatterPrint = DateTimeFormatter.ofPattern("'_'yyyyMMdd'_'HHmmss");
     @Override
