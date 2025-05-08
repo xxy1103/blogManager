@@ -208,7 +208,7 @@
 
 根据相对路径获取图片资源，直接返回图片文件而不是JSON。
 
-- **URL**: `/api/{relativePath}`
+- **URL**: `/image/{relativePath}`
 - **方法**: GET
 - **参数**:
   - `relativePath`: 图片的相对路径，例如 "image/计算机网络第五章--网络层_20250425_151005/1745565448467.png"
@@ -222,7 +222,7 @@
 
 将图片上传到服务器的指定相对路径中。
 
-- **URL**: `/api/upload`
+- **URL**: `/image/upload`
 - **方法**: POST
 - **Content-Type**: `multipart/form-data`
 - **参数**:
@@ -285,7 +285,7 @@ GET /api/计算机网络第五章--网络层_20250425_151005/1745565448467.png
 ### 上传图片
 
 ```
-POST /api/upload
+POST /image/upload
 Content-Type: multipart/form-data
 
 Form fields:

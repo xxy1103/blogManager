@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController // 标记为 REST 控制器，方法返回值直接作为响应体 (通常是 JSON)
-@RequestMapping("/api") // 为该控制器下的所有请求路径添加 /api 前缀 (可选，但推荐)
+@RequestMapping("/image") // 设置请求路径前缀为 /image
 public class ImageController {
 
     private final String imageStoragePath;
