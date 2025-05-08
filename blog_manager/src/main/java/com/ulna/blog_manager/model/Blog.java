@@ -253,7 +253,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
         if (this.saying != null){
             return "---\n" +
                     "title: " + title + '\n' +
-                    "date: " + (dateTime.toString()) + '\n' +
+                    "date: " + (formatter.format(dateTime)) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
@@ -264,7 +264,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
         else{
             return  "---\n" +
                     "title: " + title + '\n' +
-                    "date: " + (dateTime.toString()) + '\n' +
+                    "date: " + (formatter.format(dateTime)) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
@@ -277,7 +277,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
         if (this.saying != null){
             return "---\n" +
                     "title: " + title + '\n' +
-                    "date: " + (dateTime.toString()) + '\n' +
+                    "date: " + (formatter.format(dateTime)) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
@@ -288,7 +288,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
         else{
             return "---\n" +
                     "title: " + title + '\n' +
-                    "date: " + (dateTime.toString()) + '\n' +
+                    "date: " + (formatter.format(dateTime)) + '\n' +
                     "categories: " + categories + '\n' +
                     "tags: " + Arrays.toString(tags) +'\n' + 
                     "---\n" +
