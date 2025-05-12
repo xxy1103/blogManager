@@ -1,5 +1,6 @@
 package com.ulna.blog_manager.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.ulna.blog_manager.Config.Config;
 
 
 import java.io.File;
@@ -27,8 +29,14 @@ public class ImageController {
     private final String imageStoragePath;
     private static final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
-    public ImageController(@Value("${image.storage.path}") String imageStoragePath) {
-        this.imageStoragePath = imageStoragePath;
+    /**
+     * 构造函数，注入配置中的图片存储路径
+     * @param config 配置对象
+     */
+    @Autowired
+    public ImageController(Config config) {
+        this.imageStoragePath = config.getImageStoragePath().toString();
+        logger.info("图片存储目录: {}", imageStoragePath);
     }
 
     /**
@@ -60,13 +68,14 @@ public class ImageController {
             MediaType mediaType = getMediaTypeForFilename(filename);
             headers.setContentType(mediaType);
 
-            logger.info("Returning image: {}", filename);
+            logger.debug("Returning image: {}", filename);
 
             // 返回图片资源
             return ResponseEntity.ok()
                     .headers(headers)
                     .body(resource);
         } catch (Exception e) {
+            logger.error("Failed to return image: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -112,7 +121,7 @@ public class ImageController {
             @RequestParam("relativePath") String relativePath) {
         
         //打印日志
-        logger.info("Uploading image to path: {}", relativePath);
+        logger.debug("Uploading image to path: {}", relativePath);
 
         Map<String, Object> response = new HashMap<>();
         
@@ -143,7 +152,7 @@ public class ImageController {
             // 保存文件
             Files.copy(file.getInputStream(), filePath);
             
-            logger.info("Image uploaded successfully: {}", filePath);
+            logger.debug("Image uploaded successfully: {}", filePath);
             
             // 构建访问路径
             String accessPath = relativePath + "/" + filename;

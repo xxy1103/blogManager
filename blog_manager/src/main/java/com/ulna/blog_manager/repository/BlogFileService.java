@@ -1,10 +1,13 @@
 package com.ulna.blog_manager.repository; 
 
+import com.ulna.blog_manager.Config.Config;
 import com.ulna.blog_manager.model.Blog; 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 
 import jakarta.annotation.PostConstruct; // 如果使用较新的 Spring Boot/Jakarta EE
 // import javax.annotation.PostConstruct; // 如果使用较旧的 Spring Boot/Java EE
@@ -23,18 +26,15 @@ public class BlogFileService {
 
     private final Path storageLocation; // 博客文件存储的根目录路径对象
 
-    
-    /**
-     * 服务构造函数。
-     * 使用 @Value 注解从配置文件 (application.properties/yml) 注入博客存储路径。
-     * 初始化 storageLocation 字段，并确保路径是绝对且规范化的。
-     *
-     * @param storagePath 从配置中注入的存储路径字符串
-     */
-    public BlogFileService(@Value("${blog.storage.path}") String storagePath) {
-        // 将字符串路径转换为 Path 对象，获取绝对路径并规范化 (移除冗余的 . 和 ..)
-        this.storageLocation = Paths.get(storagePath).toAbsolutePath().normalize();
-        logger.info("博客存储位置初始化为: {}", this.storageLocation);
+
+    private final Config config;
+
+    @Autowired
+    public BlogFileService(Config config) {
+        this.config = config;
+        // 从配置中获取存储路径，并确保是绝对路径
+        this.storageLocation = config.getBlogStoragePath().toAbsolutePath().normalize();
+        logger.info("博客存储目录: {}", storageLocation);
     }
 
     /**
