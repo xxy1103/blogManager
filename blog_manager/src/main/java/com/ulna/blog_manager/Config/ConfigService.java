@@ -1,12 +1,12 @@
 package com.ulna.blog_manager.Config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +15,7 @@ import java.io.IOException;
 import jakarta.annotation.PostConstruct; // 如果使用较新的 Spring Boot/Jakarta EE
 
 @Configuration
-public class ConfigLoader {
+public class ConfigService {
     private Path configPath;
     private Config config;
 
@@ -28,7 +28,7 @@ public class ConfigLoader {
      *
      * @param configPath 从配置中注入的配置文件路径字符串
      */
-    public ConfigLoader(@Value("${config.storage.path}") String configPath) {
+    public ConfigService(@Value("${config.storage.path}") String configPath) {
         this.configPath = Paths.get(configPath).toAbsolutePath().normalize();
     }
     
@@ -137,6 +137,7 @@ public class ConfigLoader {
         }
     }
     
+    
     /**
      * 获取已加载的配置对象
      * 
@@ -147,4 +148,39 @@ public class ConfigLoader {
         return config;
     }
 
+    /**
+     * 更新配置并写入文件
+     * 
+     * @param newConfig 新的配置对象
+     * @return 更新是否成功
+     */
+    public boolean updateConfig(Config newConfig) {
+        if (newConfig == null) {
+            logger.error("更新配置失败：提供的配置对象为空");
+            return false;
+        }
+        
+        // 保存旧配置，以便更新失败时可以回滚
+        Config oldConfig = this.config;
+        
+        try {
+            // 更新当前内存中的配置
+            this.config = newConfig;
+            
+            // 创建用于序列化的ObjectMapper
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT); // 美化输出JSON
+            
+            // 保存到文件
+            saveConfig(objectMapper);
+            
+            logger.info("配置更新成功");
+            return true;
+        } catch (Exception e) {
+            // 发生异常，回滚到旧配置
+            this.config = oldConfig;
+            logger.error("更新配置失败：" + e.getMessage());
+            return false;
+        }
+    }
 }
