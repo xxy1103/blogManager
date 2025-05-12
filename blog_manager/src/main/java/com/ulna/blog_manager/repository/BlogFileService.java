@@ -27,7 +27,7 @@ public class BlogFileService {
     private final Path storageLocation; // 博客文件存储的根目录路径对象
 
 
-    private final Config config;
+    private Config config;
 
     @Autowired
     public BlogFileService(Config config) {
