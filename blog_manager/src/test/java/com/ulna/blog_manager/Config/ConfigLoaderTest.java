@@ -27,7 +27,7 @@ class ConfigLoaderTest {
     private Path configPath;
     private ObjectMapper objectMapper = new ObjectMapper();
     
-    private ConfigLoader configLoader;
+    private ConfigService configLoader;
     
     @BeforeEach
     void setUp() {
@@ -48,7 +48,7 @@ class ConfigLoaderTest {
         objectMapper.writeValue(configPath.toFile(), testConfig);
         
         // 创建ConfigLoader实例，注入临时配置文件路径
-        configLoader = new ConfigLoader(configPath.toString());
+        configLoader = new ConfigService(configPath.toString());
         
         // 调用被测试方法
         configLoader.loadConfig();
@@ -73,7 +73,7 @@ class ConfigLoaderTest {
         Path nonExistentPath = tempDir.resolve("non-existent-dir").resolve("config.json");
         
         // 创建ConfigLoader实例，注入不存在的路径
-        configLoader = new ConfigLoader(nonExistentPath.toString());
+        configLoader = new ConfigService(nonExistentPath.toString());
         
         // 调用被测试方法
         configLoader.loadConfig();
@@ -91,7 +91,7 @@ class ConfigLoaderTest {
         Files.createDirectory(configPath);
         
         // 创建ConfigLoader实例
-        configLoader = new ConfigLoader(configPath.toString());
+        configLoader = new ConfigService(configPath.toString());
         
         // 调用被测试方法 - 不应抛出异常，而是记录错误
         assertDoesNotThrow(() -> configLoader.loadConfig());
@@ -113,7 +113,7 @@ class ConfigLoaderTest {
         testConfig.setXModelAPIKey("test-key");
         
         // 创建ConfigLoader实例
-        configLoader = new ConfigLoader(configPath.toString());
+        configLoader = new ConfigService(configPath.toString());
         
         // 手动设置配置对象
         ReflectionTestUtils.setField(configLoader, "config", testConfig);
