@@ -284,6 +284,92 @@
   - HTTP 400 Bad Request: 如果请求体格式不正确
   - HTTP 500 Internal Server Error: 如果在更新配置过程中出现异常
 
+### 11. 设置LLM类型
+
+根据提供的类型设置当前使用的LLM模型。
+
+- **URL**: `/llm/set`
+- **方法**: GET
+- **参数**:
+  - `llmType`: LLM的类型 (例如: "XModel", "BigModel")
+- **成功响应**: 无特定响应内容，HTTP 200 OK
+- **失败响应**:
+  - HTTP 500 Internal Server Error: 如果LLM类型不受支持或设置失败。
+
+### 12. 获取当前LLM类型
+
+获取当前正在使用的LLM模型的名称。
+
+- **URL**: `/llm/get`
+- **方法**: GET
+- **参数**: 无
+- **成功响应**:
+  ```json
+  {
+    "status": 0, // 假设成功时返回类似结构，或者直接返回字符串
+    "data": "XModel", // 当前LLM的名称，例如 "XModel" 或 "BigModel"
+    "error": null
+  }
+  ```
+  或者直接返回: `XModel`
+- **失败响应**:
+  - `null` 或错误信息字符串，如果LLM未设置。
+
+### 13. 获取LLM建议（非流式）
+
+向LLM发送提示并获取非流式响应的建议。
+
+- **URL**: `/llm/getsuggestion`
+- **方法**: GET
+- **参数**:
+  - `param`: 用户输入的内容或提示
+- **成功响应**: 字符串形式的LLM建议
+- **失败响应**: 错误信息字符串，例如 "LLM 实例未设置" 或 "处理请求时发生错误: ..."
+
+
+### 14. 与LLM聊天（非流式）
+
+向LLM发送聊天内容并获取非流式响应。
+
+- **URL**: `/llm/chat`
+- **方法**: GET
+- **参数**:
+  - `param`: 用户输入的聊天内容
+- **成功响应**: 字符串形式的LLM聊天回复
+- **失败响应**: 错误信息字符串，例如 "LLM 实例未设置" 或 "处理请求时发生错误: ..."
+
+
+### 15. 与LLM聊天（流式）
+
+通过Server-Sent Events (SSE)与LLM进行流式聊天。
+
+- **URL**: `/llm/stream-chat`
+- **方法**: GET
+- **参数**:
+  - `param`: 用户输入的聊天内容
+- **成功响应**: SSE事件流。事件类型包括:
+  - `start`: 表示请求开始处理，数据为 "开始处理请求"
+  - `chunk`: 表示LLM返回的数据块，数据为实际内容
+  - `end`: 表示LLM响应结束，数据为最后一块内容
+  - `error`: 表示发生错误，数据为错误信息
+- **失败响应**: 如果LLM未设置，初始会返回错误。在流处理过程中也可能通过SSE发送错误事件。
+
+
+### 16. 获取LLM建议（流式）
+
+通过Server-Sent Events (SSE)获取LLM的流式建议。
+
+- **URL**: `/llm/stream-suggestion`
+- **方法**: GET
+- **参数**:
+  - `param`: 用户输入的内容或提示
+- **成功响应**: SSE事件流。事件类型包括:
+  - `start`: 表示请求开始处理，数据为 "开始处理请求"
+  - `chunk`: 表示LLM返回的数据块，数据为实际内容
+  - `end`: 表示LLM响应结束，数据为最后一块内容
+  - `error`: 表示发生错误，数据为错误信息
+- **失败响应**: 如果LLM未设置，初始会返回错误。在流处理过程中也可能通过SSE发送错误事件。
+
 ## 示例
 
 ### 获取博客列表
@@ -350,4 +436,40 @@ Content-Type: application/json
   "imageStoragePath": "D:/image_storage",
   "XModelAPIKey": "abc123def456"
 }
+```
+
+### 设置LLM类型
+
+```
+GET /llm/set?llmType=XModel
+```
+
+### 获取当前LLM类型
+
+```
+GET /llm/get
+```
+
+### 获取LLM建议（非流式）
+
+```
+GET /llm/getsuggestion?param=请帮我润色一下这段文字
+```
+
+### 与LLM聊天（非流式）
+
+```
+GET /llm/chat?param=你好，你叫什么名字
+```
+
+### 与LLM聊天（流式）
+
+```
+GET /llm/stream-chat?param=讲一个笑话
+```
+
+### 获取LLM建议（流式）
+
+```
+GET /llm/stream-suggestion?param=针对这个主题给我一些写作建议
 ```
