@@ -23,6 +23,7 @@
     <div v-if="!loading && !blog && !error" class="not-found-fullscreen">
       博客未找到，无法编辑。
     </div>
+    <AIChatWindow />
   </div>
 </template>
 
@@ -33,6 +34,7 @@ import { getBlogDetail, updateBlogContent, uploadImage } from '../services/blogS
 import type { BlogDetail } from '../types/blog.js'
 import Editor from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
+import AIChatWindow from '../components/AIChatWindow.vue' // Added import for AI Chat Window
 
 const route = useRoute()
 const router = useRouter()

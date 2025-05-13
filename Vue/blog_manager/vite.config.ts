@@ -34,6 +34,12 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\\/config/, '/api/config')
         // 但根据您的API文档，后端路径就是 /config/get，所以不需要rewrite
       },
+
+      '/llm': {
+        target: 'http://localhost:5200', // 您的后端 LLM 服务地址
+        changeOrigin: true,
+        // rewrite: (path) => path.replace(/^\\/llm/, '/actual/backend/llm/prefix') // 如果后端 LLM 路径需要重写
+      },
     },
   },
 })

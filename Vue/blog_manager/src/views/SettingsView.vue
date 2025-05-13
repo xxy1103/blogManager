@@ -16,6 +16,10 @@
         <label for="xmodelAPIKey">XModel API Key:</label>
         <input type="text" id="xmodelAPIKey" v-model="config.xmodelAPIKey" />
       </div>
+      <div class="form-group">
+        <label for="bigmodelAPIKey">BigModel API Key:</label>
+        <input type="text" id="bigmodelAPIKey" v-model="config.bigmodelAPIKey" />
+      </div>
       <button type="submit" :disabled="saving">
         {{ saving ? '保存中...' : '保存设置' }}
       </button>
@@ -32,6 +36,7 @@ interface SystemConfig {
   blogStoragePath: string
   imageStoragePath: string
   xmodelAPIKey: string
+  bigmodelAPIKey: string
 }
 
 const config = ref<SystemConfig | null>(null)
