@@ -1,11 +1,15 @@
 package com.ulna.blog_manager.service.LLM.LLMinterface;
 
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
+import org.springframework.boot.configurationprocessor.json.JSONArray;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 public abstract class LLM {
     private String APIKey;
     private String APIUrl;
     private String model;
+    protected JSONArray messagesArray;
+
 
     private Boolean IsStream = true;
     private String temperature = "0.5";
@@ -15,6 +19,7 @@ public abstract class LLM {
         this.APIKey = APIKey;
         this.APIUrl = APIUrl;
         this.model = model;
+        this.messagesArray = new JSONArray();
     }
 
     public String getAPIKey() { return APIKey; }

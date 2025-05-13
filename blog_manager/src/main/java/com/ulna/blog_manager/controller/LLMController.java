@@ -6,6 +6,7 @@ import com.ulna.blog_manager.service.LLM.LLMinterface.LLM;
 import com.ulna.blog_manager.service.LLM.factory.XModelFactory;
 import com.ulna.blog_manager.service.LLM.prompt.Prompt;
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
+import com.ulna.blog_manager.service.LLM.factory.BigModelFactory;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,6 +46,12 @@ public class LLMController {
                 // 创建XModelFactory实例并调用createLLM方法
                 XModelFactory factory = new XModelFactory(config);
                 llm = factory.createLLM();
+                break;
+
+            case "BigModel":
+                // 创建BigModelFactory实例并调用createLLM方法
+                BigModelFactory bigModelFactory = new BigModelFactory(config);
+                llm = bigModelFactory.createLLM();
                 break;
             default:{
                 logger.error("不支持的 LLM 类型: " + llmType);
