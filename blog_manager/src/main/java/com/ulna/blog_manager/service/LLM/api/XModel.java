@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import org.springframework.boot.configurationprocessor.json.JSONArray;
+
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 import com.ulna.blog_manager.service.LLM.LLMinterface.LLM;
