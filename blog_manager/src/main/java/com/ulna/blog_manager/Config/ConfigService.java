@@ -98,6 +98,10 @@ public class ConfigService {
                 config.setXmodelAPIKey("");
                 needsUpdate = true;
             }
+            if (config.getBigmodelAPIKey() == null) {
+                config.setBigmodelAPIKey("");
+                needsUpdate = true;
+            }
         }
         
         // 如果有更新，保存配置
@@ -122,6 +126,7 @@ public class ConfigService {
         defaultConfig.setBlogStoragePath("");
         defaultConfig.setImageStoragePath("");
         defaultConfig.setXmodelAPIKey("");
+        defaultConfig.setBigmodelAPIKey("");
         return defaultConfig;
     }
     
@@ -168,6 +173,8 @@ public class ConfigService {
             this.config.setBlogStoragePath(newConfig.getBlogStoragePath());
             this.config.setImageStoragePath(newConfig.getImageStoragePath());
             this.config.setXmodelAPIKey(newConfig.getXmodelAPIKey());
+            this.config.setBigmodelAPIKey(newConfig.getBigmodelAPIKey());
+            // 记录更新的配置
             logger.info("更新配置: " + this.config);
             
             // 创建用于序列化的ObjectMapper

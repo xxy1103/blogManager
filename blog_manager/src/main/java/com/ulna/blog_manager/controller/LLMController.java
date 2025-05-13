@@ -41,6 +41,8 @@ public class LLMController {
      */
     @RequestMapping("/set")
     public void getLlm(@RequestParam String llmType) {
+
+        logger.info("获取 LLM 实例，类型: " + llmType);
         switch (llmType) {
             case "XModel":
                 // 创建XModelFactory实例并调用createLLM方法
