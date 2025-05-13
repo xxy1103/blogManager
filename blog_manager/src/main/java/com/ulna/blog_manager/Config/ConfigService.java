@@ -87,15 +87,15 @@ public class ConfigService {
         } else {
             // 检查并设置默认路径
             if (config.getBlogStoragePath() == null) {
-                config.setBlogStoragePath(Paths.get("D:/windows/desktop/blogManager/blog"));
+                config.setBlogStoragePath("");
                 needsUpdate = true;
             }
             if (config.getImageStoragePath() == null) {
-                config.setImageStoragePath(Paths.get("D:/windows/desktop/blogManager/image"));
+                config.setImageStoragePath("");
                 needsUpdate = true;
             }
-            if (config.getXModelAPIKey() == null) {
-                config.setXModelAPIKey("");
+            if (config.getXmodelAPIKey() == null) {
+                config.setXmodelAPIKey("");
                 needsUpdate = true;
             }
         }
@@ -119,9 +119,9 @@ public class ConfigService {
      */
     private Config createDefaultConfigInMemory() {
         Config defaultConfig = new Config();
-        defaultConfig.setBlogStoragePath(Paths.get("D:/windows/desktop/blogManager/blog"));
-        defaultConfig.setImageStoragePath(Paths.get("D:/windows/desktop/blogManager/image"));
-        defaultConfig.setXModelAPIKey("");
+        defaultConfig.setBlogStoragePath("");
+        defaultConfig.setImageStoragePath("");
+        defaultConfig.setXmodelAPIKey("");
         return defaultConfig;
     }
     
@@ -165,7 +165,10 @@ public class ConfigService {
         
         try {
             // 更新当前内存中的配置
-            this.config = newConfig;
+            this.config.setBlogStoragePath(newConfig.getBlogStoragePath());
+            this.config.setImageStoragePath(newConfig.getImageStoragePath());
+            this.config.setXmodelAPIKey(newConfig.getXmodelAPIKey());
+            logger.info("更新配置: " + this.config);
             
             // 创建用于序列化的ObjectMapper
             ObjectMapper objectMapper = new ObjectMapper();

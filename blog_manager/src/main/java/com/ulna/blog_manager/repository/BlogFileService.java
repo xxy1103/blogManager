@@ -33,7 +33,7 @@ public class BlogFileService {
     public BlogFileService(Config config) {
         this.config = config;
         // 从配置中获取存储路径，并确保是绝对路径
-        this.storageLocation = config.getBlogStoragePath().toAbsolutePath().normalize();
+        this.storageLocation = Paths.get(config.getBlogStoragePath()).toAbsolutePath().normalize();
         logger.info("博客存储目录: {}", storageLocation);
     }
 

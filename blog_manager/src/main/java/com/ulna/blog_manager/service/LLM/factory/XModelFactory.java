@@ -18,7 +18,7 @@ public class XModelFactory implements FactoryInterface {
      * @param config 配置类
      */
     public XModelFactory(Config config) {
-        this.APIKey = config.getXModelAPIKey();
+        this.APIKey = config.getXmodelAPIKey();
     }
 
 

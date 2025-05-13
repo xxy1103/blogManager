@@ -4,29 +4,27 @@ import java.nio.file.Path;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Config {
-    private Path blogStoragePath;
-    private Path imageStoragePath;
-    
-    @JsonProperty("XModelAPIKey")
-    private String XModelAPIKey;
+    private String blogStoragePath;
+    private String imageStoragePath;
+    private String xmodelAPIKey;
 
-    public String getXModelAPIKey() {
-        return XModelAPIKey;
+    public String getXmodelAPIKey() {
+        return xmodelAPIKey;
     }
 
-    public void setXModelAPIKey(String XModelAPIKey) {
-        this.XModelAPIKey = XModelAPIKey;
+    public void setXmodelAPIKey(String xmodelAPIKey) {
+        this.xmodelAPIKey = xmodelAPIKey;
     }
-    public Path getBlogStoragePath() {
+    public String getBlogStoragePath() {
         return blogStoragePath;
     }
-    public void setBlogStoragePath(Path blogStoragePath) {
+    public void setBlogStoragePath(String blogStoragePath) {
         this.blogStoragePath = blogStoragePath;
     }
-    public Path getImageStoragePath() {
+    public String getImageStoragePath() {
         return imageStoragePath;
     }
-    public void setImageStoragePath(Path imageStoragePath) {
+    public void setImageStoragePath(String imageStoragePath) {
         this.imageStoragePath = imageStoragePath;
     }
 
