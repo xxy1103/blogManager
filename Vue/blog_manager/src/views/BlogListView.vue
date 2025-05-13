@@ -18,6 +18,9 @@
       </li>
     </ul>
     <div v-if="!loading && !error && blogs.length === 0" class="no-blogs">暂无博客</div>
+
+    <!-- 设置图标 -->
+    <router-link to="/settings" class="settings-icon"> ⚙️ </router-link>
   </div>
 </template>
 
@@ -173,5 +176,24 @@ onMounted(() => {
   font-size: 1em;
   color: #333;
   line-height: 1.6;
+}
+
+.settings-icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 24px; /* 调整图标大小 */
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  cursor: pointer;
+  text-decoration: none;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s;
+}
+
+.settings-icon:hover {
+  background-color: #e0e0e0;
 }
 </style>

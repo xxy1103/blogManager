@@ -4,6 +4,7 @@ import BlogListView from '../views/BlogListView.vue'
 import BlogDetailView from '../views/BlogDetailView.vue'
 import BlogEditStandaloneView from '../views/BlogEditStandaloneView.vue'
 import BlogAddView from '../views/BlogAddView.vue' // 新增创建博客页面导入
+import SettingsView from '../views/SettingsView.vue' // 导入设置页面组件
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +46,11 @@ const router = createRouter({
       path: '/blog/add',
       name: 'blog-add',
       component: BlogAddView,
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
     },
   ],
 })

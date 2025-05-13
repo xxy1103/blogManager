@@ -244,6 +244,46 @@
   }
   ```
 
+### 9. 获取系统配置
+
+获取系统的当前配置信息。
+
+- **URL**: `/config/get`
+- **方法**: GET
+- **参数**: 无
+- **成功响应**:
+  ```json
+  {
+    "blogStoragePath": "/path/to/blog/storage",
+    "imageStoragePath": "/path/to/image/storage",
+    "XModelAPIKey": "api-key-value"
+  }
+  ```
+- **失败响应**: 
+  - HTTP 500 Internal Server Error: 如果在获取配置过程中出现异常
+
+### 10. 更新系统配置
+
+更新系统的配置信息。
+
+- **URL**: `/config/set`
+- **方法**: POST
+- **Content-Type**: `application/json`
+- **请求体**:
+  ```json
+  {
+    "blogStoragePath": "/new/path/to/blog/storage",
+    "imageStoragePath": "/new/path/to/image/storage",
+    "XModelAPIKey": "new-api-key-value"
+  }
+  ```
+- **成功响应**: 
+  - `true`: 配置更新成功
+  - `false`: 配置更新失败
+- **失败响应**: 
+  - HTTP 400 Bad Request: 如果请求体格式不正确
+  - HTTP 500 Internal Server Error: 如果在更新配置过程中出现异常
+
 ## 示例
 
 ### 获取博客列表
@@ -291,4 +331,23 @@ Content-Type: multipart/form-data
 Form fields:
 - file: [图片文件]
 - relativePath: 计算机网络第五章--网络层_20250425_151005
+```
+
+### 获取系统配置
+
+```
+GET /config/get
+```
+
+### 更新系统配置
+
+```
+POST /config/set
+Content-Type: application/json
+
+{
+  "blogStoragePath": "D:/blog_storage",
+  "imageStoragePath": "D:/image_storage",
+  "XModelAPIKey": "abc123def456"
+}
 ```
