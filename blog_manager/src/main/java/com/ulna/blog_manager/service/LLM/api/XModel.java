@@ -73,7 +73,7 @@ public class XModel extends LLM {
                         isDone = true;
                     }
                     callback.onResponse(inputLine, isDone);
-                    System.out.println("收到数据块: " + inputLine);
+                    //System.out.println("收到数据块: " + inputLine);
                     if (isDone) {
                         break;
                     }
@@ -83,7 +83,7 @@ public class XModel extends LLM {
                 StringBuilder response = new StringBuilder();
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
-                    System.out.println("收到数据块: " + inputLine);
+                    //System.out.println("收到数据块: " + inputLine);
                 }
                 // 完整响应一次性回调
                 callback.onResponse(response.toString(), true);
