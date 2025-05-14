@@ -5,12 +5,27 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
+import java.util.ArrayList;
 
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 
+import com.google.gson.Gson;
 import com.ulna.blog_manager.service.LLM.LLMinterface.LLM;
+import com.ulna.blog_manager.service.LLM.POST.POSTMessage;
+import com.ulna.blog_manager.service.LLM.POST.POST;
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
+
+
+class XModelPOSTMessage extends POSTMessage {
+    private String temperature;
+
+    public XModelPOSTMessage(String role, String content, String temperature) {
+        super(role, content);
+        this.temperature = temperature;
+    }
+}
+
+
 
 public class XModel extends LLM {
     
@@ -23,28 +38,22 @@ public class XModel extends LLM {
         // 这里调用 LLM 的 API 接口
         String userId = "用户ID";
         try {
-            // 创建最外层的JSON对象
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("user", userId);
-            jsonObject.put("model", this.getModel());
 
+            POSTMessage message = new XModelPOSTMessage("user", prompt + content, this.getTemperature());
+            if (this.messagesArray == null) {
+                this.messagesArray = new ArrayList<>();
+            }
+            this.messagesArray.add(message);
+            POSTMessage[] messages = messagesArray.toArray(new POSTMessage[0]);
+            // POST 请求体
+            POST post = new POST(this.getModel(), this.getIsStream(), messages);
 
-            // 创建单个消息的JSON对象
-            JSONObject messageObject = new JSONObject();
-            String temp = prompt + content;
-            messageObject.put("role", "user");
-            messageObject.put("content", temp);
-            messageObject.put("temperature", this.getTemperature());
-            // 将单个消息对象添加到messages数组中
-            this.messagesArray.put(messageObject);
-            // 将messages数组添加到最外层的JSON对象中
-            jsonObject.put("messages", messagesArray);
-            // 设置stream属性
-            jsonObject.put("stream", this.getIsStream());
-            jsonObject.put("max_tokens", 4096);
-            // System.err.println(jsonObject);
-            String header = "Bearer " + this.getAPIKey(); 
+            Gson gson = new Gson();
 
+            String json = gson.toJson(post);
+            System.out.println("请求数据: " + json);
+
+            String header = "Bearer " + this.getAPIKey();
             URL obj = new URL(this.getAPIUrl());
 
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -54,7 +63,7 @@ public class XModel extends LLM {
             con.setDoOutput(true);
 
             OutputStream os = con.getOutputStream();
-            os.write(jsonObject.toString().getBytes());
+            os.write(json.getBytes());
             os.flush();
             os.close();
 

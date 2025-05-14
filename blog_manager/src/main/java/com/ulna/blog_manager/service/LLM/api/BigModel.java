@@ -1,23 +1,52 @@
 package com.ulna.blog_manager.service.LLM.api;
 
-import com.ulna.blog_manager.model.Message;
+
+
+import com.ulna.blog_manager.service.LLM.POST.POST;
+import com.ulna.blog_manager.service.LLM.POST.POSTMessage;
 import com.ulna.blog_manager.service.LLM.LLMinterface.LLM;
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
+
+
 import org.springframework.stereotype.Service;
+import com.google.gson.Gson;
 
 import java.io.OutputStream;
 import java.net.URL;
+import java.net.URI;                    //URI类
+import java.net.http.HttpClient;        //客户端
+import java.net.http.HttpRequest;       //构建请求消息
+import java.net.http.HttpResponse;      //处理响应消息
+import java.security.Policy;
+import java.net.http.HttpHeaders;       //处理响应头
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 
-import org.springframework.boot.configurationprocessor.json.JSONArray;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
+
+
+
+class BigModelPOST extends POST {
+    private String temperature;
+
+    public BigModelPOST(String model, Boolean stream, String temperature, POSTMessage[] messages) {
+        super(model, stream, messages);
+        this.temperature = temperature;
+    }
+
+    public String getTemperature() {
+        return temperature;
+    }
+    public void setTemperature(String temperature) {
+        this.temperature = temperature;
+    }
+}
+
 
 
 
 public class BigModel extends LLM {
-
 
     public BigModel(String APIKey, String APIUrl, String model) {
         super(APIKey, APIUrl, model);
@@ -26,22 +55,18 @@ public class BigModel extends LLM {
     @Override
     public void callLLM(String prompt,String content, StreamCallback callback) {
         try{
-            // 创建最外层的JSON对象
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("model", this.getModel());
-            jsonObject.put("stream", this.getIsStream());
-            jsonObject.put("temperature", this.getTemperature());
+            POSTMessage message = new POSTMessage("user", prompt + content);
+            if (this.messagesArray == null) {
+                this.messagesArray = new ArrayList<>();
+            }
+            this.messagesArray.add(message);
+            POSTMessage[] messages = messagesArray.toArray(new POSTMessage[0]);
+            POST post = new BigModelPOST(this.getModel(), this.getIsStream(), this.getTemperature(), messages);
 
-            // 创建单个消息对象
-            JSONObject messageObject = new JSONObject();
-            String temp = prompt + content;
-            messageObject.put("role", "user");
-            messageObject.put("content", temp);
-            
-            // 将单个消息对象添加到messages数组中
-            this.messagesArray.put(messageObject);
-            // 将messages数组添加到最外层的JSON对象中
-            jsonObject.put("messages", messagesArray);
+            Gson gson = new Gson();
+
+            String json = gson.toJson(post);
+            System.out.println("请求数据: " + json);
 
             String header = "Bearer " + this.getAPIKey();
 
@@ -52,8 +77,10 @@ public class BigModel extends LLM {
             con.setRequestProperty("Authorization", header);
             con.setDoOutput(true);
 
+            
+
             OutputStream os = con.getOutputStream();
-            os.write(jsonObject.toString().getBytes());
+            os.write(json.getBytes());
             os.flush();
             os.close();
 

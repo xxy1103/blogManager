@@ -1,14 +1,18 @@
 package com.ulna.blog_manager.service.LLM.LLMinterface;
 
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
-import org.springframework.boot.configurationprocessor.json.JSONArray;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
+import com.ulna.blog_manager.service.LLM.POST.POSTMessage;
+
+
+import java.util.ArrayList;
+
+
 
 public abstract class LLM {
     private String APIKey;
     private String APIUrl;
     private String model;
-    protected JSONArray messagesArray;
+    protected ArrayList<POSTMessage> messagesArray;
 
 
     private Boolean IsStream = true;
@@ -19,7 +23,7 @@ public abstract class LLM {
         this.APIKey = APIKey;
         this.APIUrl = APIUrl;
         this.model = model;
-        this.messagesArray = new JSONArray();
+        this.messagesArray = new ArrayList<>();
     }
 
     public String getAPIKey() { return APIKey; }
@@ -41,5 +45,5 @@ public abstract class LLM {
      * @return LLM 的响应
      */
     public abstract void callLLM(String prompt, String content, StreamCallback callback);
-
+    
 }
