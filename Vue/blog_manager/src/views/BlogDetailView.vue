@@ -1,6 +1,16 @@
 <template>
   <div class="blog-detail-view">
-    <div v-if="loading" class="loading">正在加载博客内容...</div>
+    <div class="banner-image">
+      <div class="banner-overlay"></div>
+      <div class="banner-content">
+        <h2>博客详情</h2>
+      </div>
+    </div>
+
+    <div v-if="loading" class="loading">
+      <div class="loading-spinner"></div>
+      <p>正在加载博客内容...</p>
+    </div>
     <div v-if="error" class="error">{{ error }}</div>
 
     <!-- 删除确认对话框 -->
@@ -49,24 +59,26 @@
       </div>
     </div>
 
-    <article v-if="blog" class="blog-content">
-      <div class="blog-actions">
-        <button @click="navigateToEditPage" class="btn">编辑博客</button>
-        <button @click="confirmDelete" class="btn delete-btn">删除博客</button>
-      </div>
+    <div class="content-container">
+      <article v-if="blog" class="blog-content">
+        <div class="blog-actions">
+          <button @click="navigateToEditPage" class="btn">编辑博客</button>
+          <button @click="confirmDelete" class="btn delete-btn">删除博客</button>
+        </div>
 
-      <h1>{{ blog.title }}</h1>
-      <p class="meta">
-        <span>发布于：{{ formatDate(blog.date) }}</span> |
-        <span>分类：{{ blog.categories }}</span> |
-        <span>标签：{{ blog.tags.join(', ') }}</span>
-      </p>
-      <div class="saying"><strong>摘要：</strong> {{ blog.saying }}</div>
-      <hr />
+        <h1>{{ blog.title }}</h1>
+        <p class="meta">
+          <span>📅 发布于：{{ formatDate(blog.date) }}</span> |
+          <span>📁 分类：{{ blog.categories }}</span> |
+          <span>🏷️ 标签：{{ blog.tags.join(', ') }}</span>
+        </p>
+        <div class="saying"><strong>摘要：</strong> {{ blog.saying }}</div>
+        <hr />
 
-      <!-- 非编辑模式：显示渲染后的 HTML -->
-      <div v-html="renderedContent" class="content-html"></div>
-    </article>
+        <!-- 非编辑模式：显示渲染后的 HTML -->
+        <div v-html="renderedContent" class="content-html"></div>
+      </article>
+    </div>
 
     <div v-if="!loading && !blog && !error" class="not-found">博客未找到。</div>
     <router-link to="/blogs" class="back-link">返回博客列表</router-link>
@@ -332,111 +344,200 @@ watch(
 
 <style scoped>
 .blog-detail-view {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  font-family: Inter, sans-serif;
+  position: relative;
+}
+
+.banner-image {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background-image: url('https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?ixlib=rb-4.0.3');
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(30, 36, 59, 0.7), rgba(30, 36, 59, 0.9));
+}
+
+.banner-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.banner-content h2 {
+  font-size: 2.5rem;
+  margin: 0;
+  color: var(--color-heading);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.content-container {
   max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
-  font-family: sans-serif;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 2rem;
+  padding: 1.5rem;
+  background-color: var(--color-card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
 }
 
 .loading,
 .error,
 .not-found {
   text-align: center;
-  padding: 30px;
-  font-size: 1.3em;
+  padding: 2rem;
+  font-size: 1.3rem;
+  max-width: 900px;
+  margin: 2rem auto;
+  background-color: var(--color-card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s infinite ease-in-out;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
-  color: #d9534f; /* Bootstrap danger color */
+  color: var(--color-error);
+}
+
+.blog-content {
+  padding: 0;
+  border-radius: var(--border-radius);
 }
 
 .blog-content h1 {
-  font-size: 2.5em;
-  color: #333;
-  margin-bottom: 15px;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
+  font-size: 2.2rem;
+  color: var(--color-heading);
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 0.8rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .meta {
   font-size: 0.95em;
-  color: #777;
-  margin-bottom: 20px;
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .meta span {
-  margin-right: 10px;
+  margin-right: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.meta span:hover {
+  color: var(--color-primary);
 }
 
 .saying {
-  background-color: #f9f9f9;
-  border-left: 4px solid #337ab7; /* Bootstrap primary color */
-  padding: 15px;
-  margin-bottom: 25px;
+  background-color: var(--color-background-soft);
+  border-left: 4px solid var(--color-primary);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
   font-style: italic;
-  color: #555;
+  color: var(--color-text);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .content-html {
   line-height: 1.8;
-  font-size: 1.1em;
-  color: #444;
+  font-size: 1.1rem;
+  color: var(--color-text);
 }
 
 .content-html ::v-deep(h2) {
-  font-size: 1.8em;
-  margin-top: 30px;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
+  font-size: 1.8rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5rem;
+  color: var(--color-heading);
 }
 
 .content-html ::v-deep(h3) {
-  font-size: 1.5em;
-  margin-top: 25px;
-  margin-bottom: 10px;
+  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
 }
 
 .content-html ::v-deep(p) {
-  margin-bottom: 15px;
+  margin-bottom: 1rem;
+  color: var(--color-text);
 }
 
 .content-html ::v-deep(ul),
 .content-html ::v-deep(ol) {
-  margin-left: 20px;
-  margin-bottom: 15px;
+  margin-left: 1.5rem;
+  margin-bottom: 1.2rem;
+  color: var(--color-text);
 }
 
 .content-html ::v-deep(li) {
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
 
 .content-html ::v-deep(blockquote) {
-  border-left: 3px solid #ddd;
-  padding-left: 15px;
-  color: #666;
-  margin-left: 0;
-  margin-right: 0;
+  border-left: 3px solid var(--color-primary);
+  padding: 0.8rem 1rem;
+  color: var(--color-text-muted);
+  margin: 1rem 0;
+  background-color: var(--color-background-soft);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
   font-style: italic;
 }
 
 .content-html ::v-deep(pre) {
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 4px;
+  background-color: var(--color-background);
+  padding: 1rem;
+  border-radius: var(--border-radius);
   overflow-x: auto;
   font-family: 'Courier New', Courier, monospace;
+  border: 1px solid var(--color-border);
+  margin: 1rem 0;
 }
 
 .content-html ::v-deep(code) {
   font-family: 'Courier New', Courier, monospace;
-  background-color: #f0f0f0;
-  padding: 2px 4px;
+  background-color: var(--color-background);
+  padding: 0.2rem 0.4rem;
   border-radius: 3px;
   font-size: 0.95em;
+  color: var(--color-primary-light);
 }
 
 .content-html ::v-deep(pre code) {
@@ -448,99 +549,115 @@ watch(
 .content-html ::v-deep(img) {
   max-width: 100%;
   height: auto;
-  border-radius: 4px;
-  margin: 10px 0;
+  border-radius: var(--border-radius);
+  margin: 1rem 0;
+  box-shadow: var(--box-shadow);
+  transition: transform 0.3s ease;
+}
+
+.content-html ::v-deep(img:hover) {
+  transform: scale(1.01);
 }
 
 .back-link {
   display: inline-block;
-  margin-top: 30px;
-  padding: 10px 15px;
-  background-color: #5cb85c; /* Bootstrap success color */
-  color: white;
+  margin: 2rem auto;
+  padding: 0.8rem 1.5rem;
+  background-color: var(--color-primary);
+  color: var(--color-heading);
   text-decoration: none;
-  border-radius: 5px;
-  transition: background-color 0.2s;
+  border-radius: var(--border-radius);
+  transition: var(--transition-default);
+  font-weight: 500;
+  box-shadow: var(--box-shadow);
 }
 
 .back-link:hover {
-  background-color: #4cae4c;
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .blog-actions {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 20px;
-  gap: 10px;
+  margin-bottom: 1.5rem;
+  gap: 0.8rem;
 }
 
 .btn {
-  padding: 8px 15px;
-  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--border-radius);
   border: none;
-  color: white;
-  font-size: 14px;
+  color: var(--color-heading);
+  font-size: 0.9rem;
   cursor: pointer;
-  background-color: #337ab7;
-  transition: background-color 0.2s;
+  background-color: var(--color-primary);
+  transition: var(--transition-default);
+  font-weight: 500;
+  box-shadow: var(--box-shadow);
 }
 
 .btn:hover {
-  background-color: #2e6da4;
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .btn:disabled {
-  background-color: #95a5a6;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .save-btn {
-  background-color: #5cb85c;
+  background-color: var(--color-success);
 }
 
 .save-btn:hover {
-  background-color: #4cae4c;
+  background-color: #3d9c40;
 }
 
 .edit-content {
   width: 100%;
-  margin-bottom: 20px;
-  /* Ensure editor has enough space */
+  margin-bottom: 1.5rem;
 }
 
 .save-message {
-  padding: 10px 15px;
-  margin: 10px 0;
-  border-radius: 4px;
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+  border-radius: var(--border-radius);
   text-align: center;
   animation: fadeIn 0.5s ease-in-out;
 }
 
 .save-message.success {
-  background-color: #dff0d8;
-  color: #3c763d;
-  border: 1px solid #d6e9c6;
+  background-color: rgba(76, 175, 80, 0.2);
+  color: var(--color-success);
+  border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .save-message.error {
-  background-color: #f2dede;
-  color: #a94442;
-  border: 1px solid #ebccd1;
+  background-color: rgba(244, 67, 54, 0.2);
+  color: var(--color-error);
+  border: 1px solid rgba(244, 67, 54, 0.3);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Remove editor-loading and edit-tips if not used by ToastUI or reimplement if needed */
-.editor-loading,
-.edit-tips {
-  display: none;
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1.5rem 0;
 }
 
 /* 删除确认对话框样式 */
@@ -550,25 +667,42 @@ watch(
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .delete-confirm-dialog {
   width: 90%;
   max-width: 400px;
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background-color: var(--color-card-bg);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--box-shadow-hover);
+  border: 1px solid var(--color-border);
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .delete-confirm-dialog h3 {
   margin-top: 0;
-  color: #d9534f;
+  color: var(--color-error);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .dialog-actions {
@@ -579,19 +713,20 @@ watch(
 }
 
 .delete-btn {
-  background-color: #d9534f; /* Bootstrap danger color */
+  background-color: var(--color-error);
 }
 
 .delete-btn:hover {
-  background-color: #c9302c; /* Darker red */
+  background-color: #d32f2f;
 }
 
 .cancel-btn {
-  background-color: #95a5a6; /* Gray */
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
 }
 
 .cancel-btn:hover {
-  background-color: #7f8c8d;
+  background-color: var(--color-background-mute);
 }
 
 /* 更新博客信息对话框样式 */
@@ -601,67 +736,79 @@ watch(
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .info-update-dialog {
   width: 90%;
   max-width: 500px;
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background-color: var(--color-card-bg);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--box-shadow-hover);
+  border: 1px solid var(--color-border);
+  animation: scaleIn 0.3s ease-out;
 }
 
 .info-update-dialog h3 {
   margin-top: 0;
-  color: #337ab7;
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 1.2rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--color-text);
 }
 
 .form-control {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
+  transition: var(--transition-default);
 }
 
 .form-control:focus {
-  border-color: #337ab7;
-  box-shadow: 0 0 5px rgba(51, 122, 183, 0.5);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(74, 136, 229, 0.2);
+  outline: none;
 }
 
 .update-message {
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 4px;
+  padding: 0.8rem;
+  margin: 1rem 0;
+  border-radius: var(--border-radius);
   text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 .update-message.success {
-  background-color: #dff0d8;
-  color: #3c763d;
-  border: 1px solid #d6e9c6;
+  background-color: rgba(76, 175, 80, 0.2);
+  color: var(--color-success);
+  border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .update-message.error {
-  background-color: #f2dede;
-  color: #a94442;
-  border: 1px solid #ebccd1;
+  background-color: rgba(244, 67, 54, 0.2);
+  color: var(--color-error);
+  border: 1px solid rgba(244, 67, 54, 0.3);
 }
 
 .settings-icon {
@@ -670,20 +817,22 @@ watch(
   right: 30px;
   width: 50px;
   height: 50px;
-  background-color: #337ab7;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-heading);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--transition-default);
   z-index: 100;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--box-shadow);
 }
 
 .settings-icon:hover {
-  background-color: #286090;
+  background-color: var(--color-primary-dark);
+  transform: translateY(-3px) rotate(30deg);
+  box-shadow: var(--box-shadow-hover);
 }
 </style>
 <style>

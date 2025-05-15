@@ -67,9 +67,6 @@ public class XModel extends LLM {
             os.flush();
             os.close();
 
-            int responseCode = con.getResponseCode();
-            System.out.println("Response Code : " + responseCode);
-
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
             
@@ -78,9 +75,10 @@ public class XModel extends LLM {
                 while ((inputLine = in.readLine()) != null) {
                     boolean isDone = false;
                     // 判断是否是最后的数据 (可根据实际API响应格式调整判断条件)
-                    if (inputLine.contains("\"finish_reason\":") && inputLine.contains("\"stop\"")) {
+                    if (inputLine.contains("data: [DONE]")) {
                         isDone = true;
                     }
+                    System.out.println("收到数据块: " + inputLine);
                     callback.onResponse(inputLine, isDone);
                     //System.out.println("收到数据块: " + inputLine);
                     if (isDone) {

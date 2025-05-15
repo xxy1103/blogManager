@@ -84,7 +84,6 @@ public class BigModel extends LLM {
             os.flush();
             os.close();
 
-            System.out.println(con);
 
             int responseCode = con.getResponseCode();
             System.out.println("Response Code : " + responseCode);

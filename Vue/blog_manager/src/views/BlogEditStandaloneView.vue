@@ -1,6 +1,17 @@
 <template>
   <div class="blog-edit-standalone-view">
-    <div v-if="loading" class="loading-fullscreen">正在加载博客内容...</div>
+    <!-- 添加横幅 -->
+    <div class="banner-image">
+      <div class="banner-overlay"></div>
+      <div class="banner-content">
+        <h2>编辑博客</h2>
+      </div>
+    </div>
+
+    <div v-if="loading" class="loading-fullscreen">
+      <div class="loading-spinner"></div>
+      <p>正在加载博客内容...</p>
+    </div>
     <div v-if="error" class="error-fullscreen">{{ error }}</div>
     <div v-if="saveMessage" :class="['save-message-toast', saveSuccess ? 'success' : 'error']">
       {{ saveMessage }}
@@ -20,10 +31,10 @@
       </div>
       <div ref="editorRefElement" class="editor-container-fullscreen"></div>
     </div>
+
     <div v-if="!loading && !blog && !error" class="not-found-fullscreen">
       博客未找到，无法编辑。
     </div>
-    <AIChatWindow />
   </div>
 </template>
 
@@ -32,6 +43,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getBlogDetail, updateBlogContent, uploadImage } from '../services/blogService.js'
 import type { BlogDetail } from '../types/blog.js'
+// 修复导入方式，确保 Editor 是一个值而不仅仅是一个类型
 import Editor from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
 import AIChatWindow from '../components/AIChatWindow.vue' // Added import for AI Chat Window
@@ -291,40 +303,104 @@ onBeforeUnmount(() => {
 .blog-edit-standalone-view {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100%; /* 使用100%确保适应其容器 */
+  min-height: 100vh;
+  width: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  overflow-x: hidden; /* 只隐藏水平滚动条，保留垂直滚动功能 */
-  /* 移除固定定位，防止顶部被遮挡 */
-  position: relative; /* 使用相对定位而非固定定位 */
+  overflow-x: hidden;
+  position: relative;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+/* 添加横幅样式 */
+.banner-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background-image: url('https://images.unsplash.com/photo-1510936111840-65e151ad71bb?ixlib=rb-4.0.3');
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(30, 36, 59, 0.7), rgba(30, 36, 59, 0.9));
+}
+
+.banner-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.banner-content h2 {
+  font-size: 2.2rem;
+  margin: 0;
+  color: var(--color-heading);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+/* Loading spinner style */
+.loading-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .editor-layout {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  height: 100%;
-  width: 100%; /* 确保宽度占满父容器 */
-  margin: 0; /* 确保没有外边距 */
-  padding: 0; /* 确保没有内边距 */
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 0;
+  background-color: var(--color-card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
 }
 
 .editor-header {
-  padding: 8px 12px; /* 减少内边距，原来是15px 20px */
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-background-soft);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0; /* Prevent header from shrinking */
+  flex-shrink: 0;
 }
 
 .editor-header h2 {
   margin: 0;
-  font-size: 1.5em;
-  color: #333;
+  font-size: 1.3rem;
+  color: var(--color-heading);
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .edit-actions {
@@ -333,247 +409,644 @@ onBeforeUnmount(() => {
 }
 
 .btn {
-  padding: 6px 12px; /* 减小按钮的内边距，原来是8px 15px */
-  border-radius: 4px;
-  border: 1px solid transparent;
-  color: white;
-  font-size: 14px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  border: none;
+  color: var(--color-heading);
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition:
-    background-color 0.2s,
-    border-color 0.2s;
+  transition: var(--transition-default);
+  box-shadow: var(--box-shadow);
 }
 
 .save-btn {
-  background-color: #28a745; /* Green */
-  border-color: #28a745;
+  background-color: var(--color-primary);
 }
+
 .save-btn:hover {
-  background-color: #218838;
-  border-color: #1e7e34;
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-hover);
 }
+
 .save-btn:disabled {
-  background-color: #6c757d; /* Gray */
-  border-color: #6c757d;
+  opacity: 0.6;
+  background-color: var(--color-background-mute);
   cursor: not-allowed;
+  transform: none;
 }
 
 .cancel-btn {
-  background-color: #6c757d; /* Secondary/Gray */
-  border-color: #6c757d;
+  background-color: var(--color-background-mute);
 }
+
 .cancel-btn:hover {
-  background-color: #5a6268;
-  border-color: #545b62;
+  background-color: var(--color-background-soft);
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .editor-container-fullscreen {
-  flex-grow: 1; /* Allow editor to take available vertical space */
-  width: 100%; /* 使用相对宽度代替视口宽度 */
-  border-top: 1px solid #ddd; /* Separator */
-  position: relative; /* Good for absolutely positioned children or 100% height children */
-  margin: 0; /* 确保没有外边距 */
-  padding: 0; /* 确保没有内边距 */
-  box-sizing: border-box; /* 确保边框和内边距计入总宽度 */
+  flex-grow: 1;
+  width: 100%;
+  border-top: 1px solid var(--color-border);
+  position: relative;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  min-height: 500px;
+  background-color: var(--color-background-soft);
 }
 
-/* Ensure Toast UI editor itself takes full width/height of its container */
-/* The root element of the editor, which has height: 100% from options or CSS */
+/* 隐藏编辑器中的垂直分隔线 */
+.editor-container-fullscreen :deep(.toastui-editor-md-splitter) {
+  display: none;
+}
+
+/* 修改预览区文字颜色 - 更强的选择器确保颜色生效 */
+.editor-container-fullscreen :deep(.toastui-editor-contents),
+.editor-container-fullscreen :deep(.toastui-editor-md-preview),
+.editor-container-fullscreen :deep(.toastui-editor-md-preview p),
+.editor-container-fullscreen :deep(.toastui-editor-md-preview span),
+.editor-container-fullscreen :deep(.toastui-editor-contents p),
+.editor-container-fullscreen :deep(.toastui-editor-contents span) {
+  color: #ffffff !important;
+}
+
+/* 定制 Toast UI 编辑器样式以适应深色主题 */
 :deep(.toastui-editor),
 :deep(.toastui-editor-defaultUI) {
-  /* .toastui-editor-defaultUI is often used with the default UI theme */
-  display: flex !important; /* Override if it's not already flex */
-  flex-direction: column !important; /* Stack toolbar and main content vertically */
-  height: 100% !important; /* Takes full height of .editor-container-fullscreen */
-  width: 100% !important; /* 使用相对宽度代替视口宽度 */
-  border: none !important; /* Remove default border if any, to blend with layout */
-  margin: 0 !important; /* 移除可能的外边距 */
-  padding: 0 !important; /* 移除可能的内边距 */
-  box-sizing: border-box !important; /* 边框和内边距计入总宽度 */
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  width: 100% !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  background-color: var(--color-background-soft) !important;
+  color: var(--color-text) !important;
 }
 
-/* 修正Toast UI编辑器内部的一些默认间距 */
+/* 自定义工具栏样式 */
+:deep(.toastui-editor-defaultUI-toolbar) {
+  background-color: var(--color-background) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+:deep(.toastui-editor-toolbar-icons) {
+  color: var(--color-text) !important;
+}
+
+:deep(.toastui-editor-toolbar-icons:hover) {
+  background-color: var(--color-background-mute) !important;
+  color: var(--color-primary) !important;
+}
+
+/* 编辑器内容区域样式 */
 :deep(.toastui-editor .ProseMirror) {
-  padding: 6px !important; /* 减少所见即所得编辑器的内边距 */
-  width: 100% !important; /* 确保内容区域填充可用宽度 */
+  padding: 12px 16px !important;
+  width: 100% !important;
   box-sizing: border-box !important;
+  color: var(--color-text) !important;
+  line-height: 1.7 !important;
+  font-size: 1.05rem !important;
 }
 
 :deep(.toastui-editor-main),
 :deep(.toastui-editor-main-container) {
   margin: 0 !important;
   padding: 0 !important;
-  width: 100% !important; /* 使用相对宽度代替视口宽度 */
+  width: 100% !important;
   box-sizing: border-box !important;
+  background-color: var(--color-background-soft) !important;
 }
 
 /* 确保没有边框和额外空间占用 */
 :deep(.toastui-editor) {
   border: none !important;
-  width: 100% !important; /* 使用相对宽度代替视口宽度 */
+  width: 100% !important;
   box-sizing: border-box !important;
 }
 
-/* Markdown and WYSIWYG editor containers, now inside a correctly sized parent (.toastui-editor-main or .toastui-editor-main-container).
-   They should fill this parent. */
+/* 为标题添加样式 */
+:deep(.toastui-editor h1),
+:deep(.toastui-editor h2),
+:deep(.toastui-editor h3),
+:deep(.toastui-editor h4) {
+  color: var(--color-heading) !important;
+  font-weight: 600 !important;
+}
+
+/* 添加预览区标题高亮样式 */
+:deep(.toastui-editor-md-preview h1),
+:deep(.toastui-editor-md-preview h2),
+:deep(.toastui-editor-md-preview h3),
+:deep(.toastui-editor-md-preview h4),
+:deep(.toastui-editor-md-preview h5),
+:deep(.toastui-editor-md-preview h6) {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  margin: 1.2em 0 0.6em !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+:deep(.toastui-editor-md-preview h1) {
+  font-size: 2em !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding-bottom: 0.3em !important;
+}
+
+:deep(.toastui-editor-md-preview h2) {
+  font-size: 1.6em !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding-bottom: 0.2em !important;
+}
+
+:deep(.toastui-editor-md-preview h3) {
+  font-size: 1.4em !important;
+}
+
+/* Markdown和所见即所得编辑器容器样式 */
 :deep(.toastui-editor-md-container),
 :deep(.toastui-editor-ww-container) {
-  display: flex !important; /* They are often flex rows (e.g., editor area | preview area) */
+  display: flex !important;
   height: 100% !important;
-  width: 100% !important; /* 使用相对宽度代替视口宽度 */
-  min-height: 0 !important; /* 添加此属性以确保内容可以正确滚动 */
-  margin: 0 !important; /* 移除外边距 */
-  padding: 0 !important; /* 移除内边距 */
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   box-sizing: border-box !important;
+  background-color: var(--color-background-soft) !important;
 }
 
-/* Specific scrollable areas (actual editor input, preview pane) */
-:deep(.toastui-editor-md-preview),
-:deep(.toastui-editor-md-container .toastui-editor-md-scroll-sync), /* Markdown editor's scrollable part */
-:deep(.toastui-editor-ww-container .toastui-editor-ww-scroll-sync) {
-  /* WYSIWYG editor's scrollable part */
-  height: 100% !important; /* Fill their respective flex items within md-container/ww-container */
-  overflow-y: auto !important; /* Enable vertical scrolling for these specific areas */
-  min-height: 0 !important; /* 确保可以正确滚动 */
-  padding: 8px !important; /* 减少内边距，原来通常是更大的值 */
+/* CodeMirror 编辑器样式增强 */
+:deep(.toastui-editor .CodeMirror) {
+  background-color: var(--color-background) !important;
+  color: #ffffff !important; /* 编辑区域也使用高对比度的白色文本 */
+  font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', monospace !important;
+  padding: 20px 25px !important; /* 与预览区域保持一致的内边距 */
+  line-height: 1.8 !important;
+  font-size: 1.05rem !important;
 }
 
-/* 确保编辑器占满整个页面宽度 */
-:deep(.toastui-editor-md-container .toastui-editor-md-splitter) {
-  display: none !important; /* 移除分隔线，提供额外空间 */
+:deep(.toastui-editor .CodeMirror-lines) {
+  padding-top: 0 !important;
 }
 
-/* 确保编辑区域和预览区域的宽度均匀分布 */
-:deep(.toastui-editor-md-container .toastui-editor-md-editor),
-:deep(.toastui-editor-md-container .toastui-editor-md-preview) {
-  flex: 1 1 50% !important; /* 各占50%宽度 */
-  width: 50% !important;
-  box-sizing: border-box !important;
+:deep(.toastui-editor .CodeMirror-line) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
-/* 确保没有水平滚动条 */
-:deep(.CodeMirror-hscrollbar),
-:deep(.toastui-editor-md-preview::-webkit-scrollbar-horizontal) {
-  display: none !important; /* 隐藏水平滚动条 */
+/* CodeMirror 语法高亮增强 */
+:deep(.toastui-editor .cm-header) {
+  color: var(--color-accent) !important;
+  font-weight: bold !important;
 }
 
-/* Toast UI Editor 特定滚动区域样式 */
-/* 确保编辑区域的代码编辑器可以滚动 */
-:deep(.toastui-editor .ProseMirror),
-:deep(.toastui-editor .CodeMirror),
-:deep(.toastui-editor-code-block.CodeMirror),
-:deep(.toastui-editor-md-container .toastui-editor-md-editor),
-:deep(.toastui-editor-md-container .toastui-editor-md-preview),
-:deep(.toastui-editor-md-container .toastui-editor-main) {
-  overflow: auto !important;
-  height: 100% !important;
+:deep(.toastui-editor .cm-header-1) {
+  font-size: 1.6em !important;
 }
 
-/* 让编辑器内的文本滚动容器工作正常 */
-:deep(.toastui-editor-md-container .toastui-editor-md-vertical-style),
-:deep(.toastui-editor-md-container .toastui-editor-md-vertical-style > div) {
-  overflow: auto !important;
-  height: 100% !important;
+:deep(.toastui-editor .cm-header-2) {
+  font-size: 1.4em !important;
 }
 
-/* 确保界面响应滚轮事件 */
-:deep(.toastui-editor-defaultUI-toolbar),
-:deep(.toastui-editor-defaultUI) {
-  position: relative;
-  z-index: 1; /* 确保工具栏不被隐藏 */
+:deep(.toastui-editor .cm-header-3) {
+  font-size: 1.2em !important;
 }
 
-/* 确保编辑器内没有多余边距 */
-:deep(.toastui-editor *) {
-  box-sizing: border-box;
+:deep(.toastui-editor .cm-link) {
+  color: var(--color-primary-light) !important;
+  text-decoration: underline !important;
 }
 
-/* 修正可能的水平滚动问题 */
-:deep(.toastui-editor-main),
-:deep(.toastui-editor-main-container),
+:deep(.toastui-editor .cm-url) {
+  color: var(--color-primary) !important;
+}
+
+:deep(.toastui-editor .cm-string) {
+  color: #7ec699 !important;
+}
+
+:deep(.toastui-editor .cm-strong) {
+  color: var(--color-accent-light) !important;
+  font-weight: bold !important;
+}
+
+:deep(.toastui-editor .cm-em) {
+  color: #a2d5f2 !important;
+  font-style: italic !important;
+}
+
+:deep(.toastui-editor .cm-comment) {
+  color: #7c7c7c !important;
+}
+
+:deep(.toastui-editor .cm-code) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffcc66 !important; /* 与预览区域保持一致 */
+  border-radius: 3px !important;
+  padding: 0.2em 0.4em !important;
+}
+
+:deep(.toastui-editor .cm-quote) {
+  color: var(--color-text) !important;
+  font-style: italic !important;
+  border-left: 3px solid var(--color-primary) !important;
+  padding-left: 10px !important;
+  margin-left: 0px !important;
+}
+
+/* CodeMirror 光标和选择区域 */
+:deep(.toastui-editor .CodeMirror-cursor) {
+  border-left: 2px solid var(--color-primary-light) !important;
+  border-right: none !important;
+  width: 0 !important;
+}
+
+:deep(.toastui-editor .CodeMirror-selected) {
+  background-color: rgba(74, 136, 229, 0.3) !important;
+}
+
+/* 强调、粗体、斜体文本的样式 */
+:deep(.toastui-editor-md-preview strong),
+:deep(.toastui-editor-md-preview b) {
+  color: var(--color-accent-light) !important; /* 强调色使粗体文本更明显 */
+  font-weight: 700 !important;
+}
+
+:deep(.toastui-editor-md-preview em),
+:deep(.toastui-editor-md-preview i) {
+  color: #a2d5f2 !important; /* 浅蓝色为斜体文本 */
+  font-style: italic !important;
+}
+
+/* 复选框样式增强 */
+:deep(.toastui-editor-md-preview .task-list-item) {
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-left: -1em !important;
+}
+
+:deep(.toastui-editor-md-preview .task-list-item input[type='checkbox']) {
+  margin-right: 0.5em !important;
+  vertical-align: middle !important;
+}
+
+/* 链接悬停状态 */
+:deep(.toastui-editor-md-preview a:hover) {
+  color: var(--color-accent) !important;
+  text-decoration: underline !important;
+}
+
+/* 提高行内代码与普通文本的区分度 */
+:deep(.toastui-editor-md-preview *:not(pre) > code) {
+  font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', monospace !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffcc66 !important; /* 使用黄色增强可见度 */
+  border-radius: 3px !important;
+  padding: 0.2em 0.4em !important;
+  font-size: 0.9em !important;
+  white-space: nowrap !important;
+}
+
+/* 提高预览区域的滚动条可见性 */
+:deep(.toastui-editor-md-preview::-webkit-scrollbar) {
+  width: 8px !important;
+}
+
+:deep(.toastui-editor-md-preview::-webkit-scrollbar-track) {
+  background: var(--color-background) !important;
+}
+
+:deep(.toastui-editor-md-preview::-webkit-scrollbar-thumb) {
+  background-color: var(--color-primary) !important;
+  border-radius: 20px !important;
+}
+
+/* 预览区域中的脚注增强 */
+:deep(.toastui-editor-md-preview .footnote-ref),
+:deep(.toastui-editor-md-preview .footnote-backref) {
+  color: var(--color-primary-light) !important;
+  text-decoration: none !important;
+}
+
+:deep(.toastui-editor-md-preview .footnotes) {
+  border-top: 1px solid var(--color-border) !important;
+  padding-top: 1em !important;
+  margin-top: 2em !important;
+  font-size: 0.9em !important;
+}
+
+/* 强化表格样式 */
+:deep(.toastui-editor-md-preview table) {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 1em 0 !important;
+}
+
+:deep(.toastui-editor-md-preview th),
+:deep(.toastui-editor-md-preview td) {
+  border: 1px solid var(--color-border) !important;
+  padding: 8px 12px !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+:deep(.toastui-editor-md-preview th) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 编辑区域和预览区域的边框和背景增强 */
+:deep(.toastui-editor-md-container) {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--border-radius) !important;
+  overflow: hidden !important;
+}
+
+/* 增强代码高亮 */
+:deep(.toastui-editor-md-preview .hljs) {
+  display: block !important;
+  overflow-x: auto !important;
+  padding: 1em !important;
+  color: #e0e0e0 !important;
+  background-color: var(--color-background-soft) !important;
+}
+
+:deep(.toastui-editor-md-preview .hljs-comment),
+:deep(.toastui-editor-md-preview .hljs-quote) {
+  color: #7c7c7c !important;
+}
+
+:deep(.toastui-editor-md-preview .hljs-keyword),
+:deep(.toastui-editor-md-preview .hljs-selector-tag),
+:deep(.toastui-editor-md-preview .hljs-addition) {
+  color: #cc99cd !important;
+}
+
+:deep(.toastui-editor-md-preview .hljs-number),
+:deep(.toastui-editor-md-preview .hljs-string),
+:deep(.toastui-editor-md-preview .hljs-meta .hljs-meta-string),
+:deep(.toastui-editor-md-preview .hljs-literal),
+:deep(.toastui-editor-md-preview .hljs-doctag),
+:deep(.toastui-editor-md-preview .hljs-regexp) {
+  color: #7ec699 !important;
+}
+
+:deep(.toastui-editor-md-preview .hljs-title),
+:deep(.toastui-editor-md-preview .hljs-section),
+:deep(.toastui-editor-md-preview .hljs-name),
+:deep(.toastui-editor-md-preview .hljs-selector-id),
+:deep(.toastui-editor-md-preview .hljs-selector-class) {
+  color: #f8c555 !important;
+}
+
+:deep(.toastui-editor-md-preview .hljs-attribute),
+:deep(.toastui-editor-md-preview .hljs-attr),
+:deep(.toastui-editor-md-preview .hljs-variable),
+:deep(.toastui-editor-md-preview .hljs-template-variable),
+:deep(.toastui-editor-md-preview .hljs-class .hljs-title),
+:deep(.toastui-editor-md-preview .hljs-type) {
+  color: #7ca9f2 !important;
+}
+
+/* 图片显示增强 */
+:deep(.toastui-editor-md-preview img) {
+  max-width: 100% !important;
+  border-radius: var(--border-radius) !important;
+  border: 1px solid var(--color-border) !important;
+  margin: 1em 0 !important;
+  display: block !important;
+}
+
+/* 列表项增强 */
+:deep(.toastui-editor-md-preview ul),
+:deep(.toastui-editor-md-preview ol) {
+  padding-left: 2em !important;
+  margin: 1em 0 !important;
+}
+
+:deep(.toastui-editor-md-preview li + li) {
+  margin-top: 0.5em !important;
+}
+
+/* WYSIWYG模式特定样式增强 */
+:deep(.toastui-editor-ww-container .toastui-editor-ww-viewer) {
+  background-color: var(--color-background) !important;
+  color: #ffffff !important; /* 使用高对比度白色 */
+}
+
+:deep(.toastui-editor-ww-container .ProseMirror) {
+  background-color: var(--color-background) !important;
+  color: #ffffff !important;
+  padding: 20px 25px !important; /* 与Markdown预览保持一致的内边距 */
+  line-height: 1.8 !important;
+  font-size: 1.05rem !important;
+}
+
+/* 增强WYSIWYG模式中的标题 */
+:deep(.toastui-editor-ww-container .ProseMirror h1),
+:deep(.toastui-editor-ww-container .ProseMirror h2),
+:deep(.toastui-editor-ww-container .ProseMirror h3) {
+  color: var(--color-accent) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding-bottom: 0.3em !important;
+  margin-bottom: 1em !important;
+  margin-top: 1.5em !important;
+}
+
+/* WYSIWYG模式中的链接样式 */
+:deep(.toastui-editor-ww-container .ProseMirror a) {
+  color: var(--color-primary-light) !important;
+  text-decoration: underline !important;
+}
+
+:deep(.toastui-editor-ww-container .ProseMirror a:hover) {
+  color: var(--color-accent) !important;
+}
+
+/* WYSIWYG模式中代码块和行内代码样式 */
+:deep(.toastui-editor-ww-container .ProseMirror pre) {
+  background-color: var(--color-background-soft) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 1em !important;
+  margin: 1em 0 !important;
+}
+
+:deep(.toastui-editor-ww-container .ProseMirror code) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffcc66 !important; /* 使用黄色增强可见度 */
+  border-radius: 3px !important;
+  padding: 0.2em 0.4em !important;
+  font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', monospace !important;
+  font-size: 0.9em !important;
+}
+
+/* WYSIWYG模式中的引用样式 */
+:deep(.toastui-editor-ww-container .ProseMirror blockquote) {
+  border-left: 4px solid var(--color-primary) !important;
+  color: var(--color-text) !important;
+  background-color: rgba(74, 136, 229, 0.1) !important;
+  padding: 0.8rem 1rem !important;
+  margin: 1em 0 !important;
+}
+
+/* 强化WYSIWYG模式中表格的样式 */
+:deep(.toastui-editor-ww-container .ProseMirror table) {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 1em 0 !important;
+}
+
+:deep(.toastui-editor-ww-container .ProseMirror th),
+:deep(.toastui-editor-ww-container .ProseMirror td) {
+  border: 1px solid var(--color-border) !important;
+  padding: 8px 12px !important;
+  color: #ffffff !important; /* 确保表格内文本清晰可见 */
+  font-weight: 500 !important;
+}
+
+:deep(.toastui-editor-ww-container .ProseMirror th) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 为编辑区域的表格也添加高亮文本样式 */
+:deep(.toastui-editor .CodeMirror .cm-table) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+:deep(.toastui-editor .CodeMirror .cm-table-header) {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* WYSIWYG模式中的列表项样式 */
+:deep(.toastui-editor-ww-container .ProseMirror ul),
+:deep(.toastui-editor-ww-container .ProseMirror ol) {
+  padding-left: 2em !important;
+  margin: 1em 0 !important;
+  color: #ffffff !important;
+}
+
+:deep(.toastui-editor-ww-container .ProseMirror li + li) {
+  margin-top: 0.5em !important;
+}
+
+/* WYSIWYG模式中的粗体和斜体文本样式 */
+:deep(.toastui-editor-ww-container .ProseMirror strong),
+:deep(.toastui-editor-ww-container .ProseMirror b) {
+  color: var(--color-accent-light) !important;
+  font-weight: 700 !important;
+}
+
+:deep(.toastui-editor-ww-container .ProseMirror em),
+:deep(.toastui-editor-ww-container .ProseMirror i) {
+  color: #a2d5f2 !important;
+  font-style: italic !important;
+}
+
+/* 在编辑器元素上添加过渡效果 */
+:deep(.toastui-editor),
+:deep(.toastui-editor-defaultUI),
 :deep(.toastui-editor-md-container),
-:deep(.toastui-editor-ww-container),
-:deep(.toastui-editor-md-preview),
-:deep(.toastui-editor-md-editor) {
-  max-width: 100% !important;
-  overflow-x: hidden !important; /* 防止水平滚动 */
-}
-
-/* 添加样式确保 loading 和 error 消息不会被遮挡 */
-.loading-fullscreen,
-.error-fullscreen,
-.not-found-fullscreen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  font-size: 1.5em;
-  color: #555;
-  position: static; /* 确保不会因为其他元素定位问题而被遮挡 */
-  z-index: 2; /* 确保在其他元素之上 */
-}
-.error-fullscreen {
-  color: #d9534f;
-}
-
-.save-message-toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
-  border-radius: 5px;
-  color: white;
-  z-index: 1000;
-  font-size: 1em;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-.save-message-toast.success {
-  background-color: #28a745;
-}
-.save-message-toast.error {
-  background-color: #dc3545;
-}
-
-/* 确保在所见即所得模式下，编辑区域占满宽度 */
 :deep(.toastui-editor-ww-container) {
-  width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
+  transition: all 0.3s ease-in-out !important;
 }
 
-/* WYSIWYG模式特定样式 */
-:deep(.toastui-editor.ww-mode) {
-  width: 100% !important;
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
+/* 添加工具栏按钮的过渡效果 */
+:deep(.toastui-editor-toolbar-icons) {
+  transition: all 0.2s ease !important;
 }
 
-:deep(.toastui-editor.ww-mode .toastui-editor-main) {
-  width: 100% !important;
-  height: 100% !important;
-  flex: 1 1 auto !important;
-  display: flex !important;
-  flex-direction: column !important;
+:deep(.toastui-editor-toolbar-icons:hover) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
 }
 
-:deep(.toastui-editor.ww-mode .ProseMirror) {
-  width: 100% !important;
+:deep(.toastui-editor-toolbar-icons:active) {
+  transform: translateY(0) !important;
+}
+
+/* 增强选项卡切换动画 */
+:deep(.toastui-editor .tab-item) {
+  transition: all 0.3s ease !important;
+}
+
+:deep(.toastui-editor .tab-item:hover) {
+  background-color: var(--color-background-mute) !important;
+}
+
+:deep(.toastui-editor .tab-item.active) {
+  font-weight: bold !important;
+  color: var(--color-primary) !important;
+  border-bottom: 2px solid var(--color-primary) !important;
+}
+
+/* 提高编辑器主题一致性 */
+:deep(.toastui-editor-dark) {
+  --toastui-editor-bg-color: var(--color-background) !important;
+  --toastui-editor-border: var(--color-border) !important;
+  --toastui-editor-primary: var(--color-primary) !important;
+  --toastui-editor-text-color: #ffffff !important;
+}
+
+/* 自定义占位符文本 */
+:deep(.toastui-editor .placeholder) {
+  color: var(--color-text-muted) !important;
+  font-style: italic !important;
+}
+
+/* 编辑器焦点状态增强 */
+:deep(.toastui-editor-md-container:focus-within),
+:deep(.toastui-editor-ww-container:focus-within) {
+  box-shadow: 0 0 0 2px var(--color-primary-light) !important;
+}
+
+/* 消除轮廓线，使用自定义焦点效果 */
+:deep(.toastui-editor *:focus) {
+  outline: none !important;
+}
+
+/* 确保预览区域中的内容与编辑器宽度一致 */
+:deep(.toastui-editor-md-preview) {
   max-width: 100% !important;
-  height: 100% !important;
-  padding: 8px 16px !important;
-  overflow-y: auto !important;
-  box-sizing: border-box !important;
+  overflow-x: hidden !important;
 }
 
-/* 确保不会出现重复的编辑器实例 */
-:deep(.toastui-editor-ww-container:not(:first-child)) {
-  display: none !important;
+:deep(.toastui-editor-md-preview > *) {
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
 }
 
-/* 确保模式切换时预览区域消失 */
-:deep(.toastui-editor.ww-mode .toastui-editor-md-preview) {
-  display: none !important;
+/* 优化移动设备上的体验 */
+@media (max-width: 768px) {
+  :deep(.toastui-editor-md-container .toastui-editor-md-editor),
+  :deep(.toastui-editor-md-container .toastui-editor-md-preview) {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+
+  :deep(.toastui-editor-md-container) {
+    flex-direction: column !important;
+  }
+
+  :deep(.toastui-editor .CodeMirror),
+  :deep(.toastui-editor-md-preview),
+  :deep(.toastui-editor-ww-container .ProseMirror) {
+    padding: 15px !important;
+    font-size: 0.95rem !important;
+  }
 }
 </style>
