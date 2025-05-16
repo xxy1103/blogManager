@@ -10,6 +10,7 @@ import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
 
 import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.io.OutputStream;
 import java.net.URL;
@@ -90,18 +91,37 @@ public class BigModel extends LLM {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
-            
+            StringBuffer LLMtext = new StringBuffer();
             if (this.getIsStream()) {
+                Boolean isDone = false;
                 // 流式传输模式：每读取一行就回调一次
                 while ((inputLine = in.readLine()) != null) {
-                    boolean isDone = false;
-                    // 判断是否是最后的数据 (可根据实际API响应格式调整判断条件)
-                    if (inputLine.contains("\"finish_reason\":") && inputLine.contains("\"stop\"")) {
-                        isDone = true;
-                    }
-                    callback.onResponse(inputLine, isDone);
-                    if (isDone) {
-                        break;
+                    if (inputLine.startsWith("data: ")) {
+                        String data = inputLine.substring(6);
+                        if (data.equals("[DONE]")) {
+                            isDone = true;
+                        }
+                        String LLMcontent = "";
+                        try {
+                            JsonObject jsonResponse = gson.fromJson(data, JsonObject.class);
+                            
+                            if (jsonResponse.has("choices") && 
+                                jsonResponse.getAsJsonArray("choices").size() > 0 &&
+                                jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().has("delta") &&
+                                jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("delta").has("content")) {
+                                LLMcontent = jsonResponse.getAsJsonArray("choices").get(0)
+                                        .getAsJsonObject().getAsJsonObject("delta")
+                                        .get("content").getAsString();
+                            }
+                            
+                        } catch (Exception e) {
+                            System.out.println("解析数据块时发生错误: " + e.getMessage());
+                        }
+                        callback.onResponse(inputLine, isDone);
+                        LLMtext.append(LLMcontent);
+                        if (isDone) {
+                            break;
+                        }
                     }
                 }
             } else {
@@ -111,17 +131,28 @@ public class BigModel extends LLM {
                     response.append(inputLine);
                     System.out.println("收到数据块: " + inputLine);
                 }
+                // 解析完整响应
+                JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
+                String LLMcontent = "";
+                if (jsonResponse.has("choices") &&
+                        jsonResponse.getAsJsonArray("choices").size() > 0 &&
+                        jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().has("message") &&
+                        jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").has("content")) {
+                    LLMcontent = jsonResponse.getAsJsonArray("choices").get(0)
+                            .getAsJsonObject().getAsJsonObject("message")
+                            .get("content").getAsString();
+                    LLMtext.append(LLMcontent);
+                }
                 // 完整响应一次性回调
                 callback.onResponse(response.toString(), true);
             }
-            
             in.close();
-        }catch (Exception e) {
+
+            POSTMessage message1 = new POSTMessage("assistant", LLMtext.toString());
+            this.messagesArray.add(message1);
+        } catch (Exception e) {
             e.printStackTrace();
             callback.onError("调用LLM时发生错误: " + e.getMessage());
         }
     }
-
-    
-
 }
