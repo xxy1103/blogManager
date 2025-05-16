@@ -25,19 +25,7 @@ public class XModelTest {
     private static final String TEST_MODEL = "x1";
     private static final String TEST_PROMPT = 
     """
-    # 下载a1111原版web ui
-
-通过git将github库克隆到本地：
-
-```
-git clone git@github.com:AUTOMATIC1111/stable-diffusion-webui.git
-```
-
-注意：连接上github可能需要魔法。
-
-这里是作者的github库，喜欢的朋友可以去点一个star。[网页链接](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
-
-完成这一步，我们就已经将web ui装在了我们的电脑上，但是想要正常运行它，我们可能还缺少关键一步。
+    hi
     """;
 
 

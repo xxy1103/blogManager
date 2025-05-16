@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.ulna.blog_manager.service.LLM.LLMinterface.LLM;
 import com.ulna.blog_manager.service.LLM.POST.POSTMessage;
 import com.ulna.blog_manager.service.LLM.POST.POST;
@@ -73,20 +74,33 @@ public class XModel extends LLM {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
-            
+            StringBuilder LLMtext = new StringBuilder();
             if (this.getIsStream()) {
                 // 流式传输模式：每读取一行就回调一次
+                boolean isDone = false;
                 while ((inputLine = in.readLine()) != null) {
-                    boolean isDone = false;
                     // 判断是否是最后的数据 (可根据实际API响应格式调整判断条件)
-                    if (inputLine.contains("data: [DONE]")) {
-                        isDone = true;
-                    }
-                    logger.debug("收到数据块: " + inputLine);
-                    callback.onResponse(inputLine, isDone);
-
-                    if (isDone) {
-                        break;
+                    if(inputLine.startsWith("data: ")) {
+                        String data = inputLine.substring(6); // 去掉前缀 "data: "
+                        if (data.equals("[DONE]")) {
+                            isDone = true;
+                            callback.onResponse(inputLine, isDone);
+                            break;
+                        }
+                        String LLMcontent = "";
+                        try{
+                            JsonObject jsonResponse = gson.fromJson(data, JsonObject.class);
+                            if(jsonResponse.has("choices") &&
+                               jsonResponse.getAsJsonArray("choices").size() > 0 &&
+                                 jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().has("delta") &&
+                                    jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().get("delta").isJsonObject()) {
+                                LLMcontent = jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().get("delta").getAsJsonObject().get("content").getAsString();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        callback.onResponse(inputLine, isDone);
+                        LLMtext.append(LLMcontent);
                     }
                 }
             } else {
@@ -94,14 +108,26 @@ public class XModel extends LLM {
                 StringBuilder response = new StringBuilder();
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
-                    
+                    logger.debug("收到数据块: " + inputLine);
                 }
-                // 完整响应一次性回调
                 callback.onResponse(response.toString(), true);
+
+                JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
+                String LLMcontent = "";
+                if (jsonResponse.has("choices") &&
+                        jsonResponse.getAsJsonArray("choices").size() > 0 &&
+                        jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().has("message") &&
+                        jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").has("content")) {
+                    LLMcontent = jsonResponse.getAsJsonArray("choices").get(0)
+                            .getAsJsonObject().getAsJsonObject("message")
+                            .get("content").getAsString();
+                    LLMtext.append(LLMcontent);
+                }
             }
-            
             in.close();
-            
+
+            POSTMessage message1 = new XModelPOSTMessage("assistant", LLMtext.toString(), this.getTemperature());
+            this.messagesArray.add(message1);
         } catch (Exception e) {
             e.printStackTrace();
             callback.onError("调用LLM时发生错误: " + e.getMessage());

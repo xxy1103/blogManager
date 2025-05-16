@@ -128,6 +128,7 @@ public class BigModel extends LLM {
                     response.append(inputLine);
                     logger.debug("收到数据块: " + inputLine);
                 }
+                callback.onResponse(response.toString(), true);
                 // 解析完整响应
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
                 String LLMcontent = "";
@@ -141,7 +142,6 @@ public class BigModel extends LLM {
                     LLMtext.append(LLMcontent);
                 }
                 // 完整响应一次性回调
-                callback.onResponse(response.toString(), true);
             }
             in.close();
 
