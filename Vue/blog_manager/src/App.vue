@@ -7,7 +7,7 @@ import AIChatWindow from './components/AIChatWindow.vue'
   <header class="site-header">
     <div class="wrapper">
       <RouterLink to="/" class="header-title-link">
-        <h1>Rookie's Blog</h1>
+        <h1>Ulna's Blog</h1>
       </RouterLink>
       <nav>
         <RouterLink to="/" class="nav-link">首页</RouterLink>
