@@ -7,6 +7,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 import com.google.gson.Gson;
@@ -28,7 +31,8 @@ class XModelPOSTMessage extends POSTMessage {
 
 
 public class XModel extends LLM {
-    
+    private static final Logger logger = LoggerFactory.getLogger(XModel.class);
+
     public XModel(String APIKey, String APIUrl, String model) {
         super(APIKey, APIUrl, model);
     }
@@ -51,7 +55,7 @@ public class XModel extends LLM {
             Gson gson = new Gson();
 
             String json = gson.toJson(post);
-            System.out.println("请求数据: " + json);
+            logger.debug("请求数据: " + json);
 
             String header = "Bearer " + this.getAPIKey();
             URL obj = new URL(this.getAPIUrl());
@@ -78,9 +82,9 @@ public class XModel extends LLM {
                     if (inputLine.contains("data: [DONE]")) {
                         isDone = true;
                     }
-                    System.out.println("收到数据块: " + inputLine);
+                    logger.debug("收到数据块: " + inputLine);
                     callback.onResponse(inputLine, isDone);
-                    //System.out.println("收到数据块: " + inputLine);
+
                     if (isDone) {
                         break;
                     }
@@ -90,7 +94,7 @@ public class XModel extends LLM {
                 StringBuilder response = new StringBuilder();
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
-                    //System.out.println("收到数据块: " + inputLine);
+                    
                 }
                 // 完整响应一次性回调
                 callback.onResponse(response.toString(), true);

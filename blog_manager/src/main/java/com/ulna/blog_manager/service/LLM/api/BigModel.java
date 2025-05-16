@@ -4,6 +4,7 @@ package com.ulna.blog_manager.service.LLM.api;
 
 import com.ulna.blog_manager.service.LLM.POST.POST;
 import com.ulna.blog_manager.service.LLM.POST.POSTMessage;
+import com.ulna.blog_manager.controller.BlogController;
 import com.ulna.blog_manager.service.LLM.LLMinterface.LLM;
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
 
@@ -14,17 +15,12 @@ import com.google.gson.JsonObject;
 
 import java.io.OutputStream;
 import java.net.URL;
-import java.net.URI;                    //URI类
-import java.net.http.HttpClient;        //客户端
-import java.net.http.HttpRequest;       //构建请求消息
-import java.net.http.HttpResponse;      //处理响应消息
-import java.security.Policy;
-import java.net.http.HttpHeaders;       //处理响应头
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -48,6 +44,8 @@ class BigModelPOST extends POST {
 
 
 public class BigModel extends LLM {
+    private static final Logger logger = LoggerFactory.getLogger(BigModel.class);
+
 
     public BigModel(String APIKey, String APIUrl, String model) {
         super(APIKey, APIUrl, model);
@@ -67,7 +65,7 @@ public class BigModel extends LLM {
             Gson gson = new Gson();
 
             String json = gson.toJson(post);
-            System.out.println("请求数据: " + json);
+            logger.debug("请求数据: " + json);
 
             String header = "Bearer " + this.getAPIKey();
 
@@ -87,7 +85,7 @@ public class BigModel extends LLM {
 
 
             int responseCode = con.getResponseCode();
-            System.out.println("Response Code : " + responseCode);
+            logger.debug("Response Code : " + responseCode);
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
@@ -117,7 +115,7 @@ public class BigModel extends LLM {
                             }
                             
                         } catch (Exception e) {
-                            System.out.println("解析数据块时发生错误: " + e.getMessage());
+                            logger.error("解析数据块时发生错误: " + e.getMessage());
                         }
                         callback.onResponse(inputLine, isDone);
                         LLMtext.append(LLMcontent);
@@ -128,7 +126,7 @@ public class BigModel extends LLM {
                 StringBuilder response = new StringBuilder();
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
-                    System.out.println("收到数据块: " + inputLine);
+                    logger.debug("收到数据块: " + inputLine);
                 }
                 // 解析完整响应
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);

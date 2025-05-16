@@ -3,7 +3,6 @@ package com.ulna.blog_manager.service.LLM.LLMinterface;
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
 import com.ulna.blog_manager.service.LLM.POST.POSTMessage;
 
-
 import java.util.ArrayList;
 
 
