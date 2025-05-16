@@ -215,7 +215,7 @@ const messagesContainer = ref<HTMLDivElement | null>(null)
 let eventSource: EventSource | null = null
 const selectedModel = ref('XModel') // 默认选择XModel，后续会从后端获取实际值
 let messageTimeoutId: number | null = null // 添加超时处理ID
-const MESSAGE_TIMEOUT = 180000 // 设置180秒超时（可根据需要调整）
+const MESSAGE_TIMEOUT = 360000 // 设置360秒超时（可根据需要调整）
 
 // 组件挂载时获取当前模型设置
 onMounted(() => {
