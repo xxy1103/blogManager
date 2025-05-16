@@ -100,6 +100,8 @@ public class BigModel extends LLM {
                         String data = inputLine.substring(6);
                         if (data.equals("[DONE]")) {
                             isDone = true;
+                            callback.onResponse(inputLine, isDone);
+                            break;
                         }
                         String LLMcontent = "";
                         try {
@@ -119,9 +121,6 @@ public class BigModel extends LLM {
                         }
                         callback.onResponse(inputLine, isDone);
                         LLMtext.append(LLMcontent);
-                        if (isDone) {
-                            break;
-                        }
                     }
                 }
             } else {
