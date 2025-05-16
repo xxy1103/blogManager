@@ -122,14 +122,20 @@ public class ConfigService {
      * 创建内存中的默认配置对象
      */
     private Config createDefaultConfigInMemory() {
+        String currentDir = System.getProperty("user.dir");
+        String blogStoragePath = currentDir + "/blogs";
+        String imageStoragePath = currentDir + "/images";
+        String xmodelAPIKey = "your-xmodel-api-key";
+        String bigmodelAPIKey = "your-bigmodel-api-key";
+
         Config defaultConfig = new Config();
-        defaultConfig.setBlogStoragePath("");
-        defaultConfig.setImageStoragePath("");
-        defaultConfig.setXmodelAPIKey("");
-        defaultConfig.setBigmodelAPIKey("");
+        defaultConfig.setBlogStoragePath(blogStoragePath);
+        defaultConfig.setImageStoragePath(imageStoragePath);
+        defaultConfig.setXmodelAPIKey(xmodelAPIKey);
+        defaultConfig.setBigmodelAPIKey(bigmodelAPIKey);
         return defaultConfig;
     }
-    
+
     /**
      * 保存配置到文件
      */
