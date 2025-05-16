@@ -24,12 +24,12 @@
         </div>
 
         <div class="form-group">
-          <label for="xmodelAPIKey">XModel API Key</label>
+          <label for="xmodelAPIKey">XModel API Key(X1深度思考模型)(获取地址：<a href="https://www.xfyun.cn/" target="_blank">https://www.xfyun.cn/</a>)</label>
           <input type="text" id="xmodelAPIKey" v-model="config.xmodelAPIKey" />
         </div>
 
         <div class="form-group">
-          <label for="bigmodelAPIKey">BigModel API Key</label>
+          <label for="bigmodelAPIKey">BigModel API Key(GML-4-FLASH免费)(获取地址：<a href="https://open.bigmodel.cn/" target="_blank">https://open.bigmodel.cn/</a>)</label>
           <input type="text" id="bigmodelAPIKey" v-model="config.bigmodelAPIKey" />
         </div>
 
