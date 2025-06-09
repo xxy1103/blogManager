@@ -116,6 +116,14 @@ const removeTag = (index: number) => {
 const submitForm = async () => {
   if (submitting.value) return
 
+  // 验证是否添加了标签
+  if (formData.tags.length === 0) {
+    formMessage.text = '请至少添加一个标签'
+    formMessage.type = 'error'
+    formMessage.show = true
+    return
+  }
+
   submitting.value = true
   formMessage.show = false
 
