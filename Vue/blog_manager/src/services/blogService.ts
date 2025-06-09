@@ -325,41 +325,90 @@ export async function deleteBlog(
   }
 }
 
-export async function uploadImage(file: File, relativePath: string): Promise<string> {
+// Updated uploadImage function based on the new API documentation
+export async function uploadImage(
+  file: File,
+): Promise<{ success: boolean; message: string; imageId?: number; imageUrl?: string }> {
   const formData = new FormData()
-  // The backend API /image/upload expects 'file' and 'relativePath'
-  // The filename of the 'file' part in FormData should be the desired timestamped filename
   formData.append('file', file)
-  formData.append('relativePath', relativePath)
 
   try {
-    // As per API documentation, /image/upload is not prefixed with /api
+    const token = AuthService.getToken()
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    // The API endpoint is /image/upload and is not prefixed with /api
     const response = await fetch('/image/upload', {
+      // Ensure this matches your server configuration (e.g., http://localhost:8080/image/upload if not using a proxy)
       method: 'POST',
+      headers: headers,
       body: formData,
-      // Headers like 'Content-Type': 'multipart/form-data' are typically set automatically by the browser for FormData
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Image upload failed: ${response.status} ${errorText}`)
+      const errorData = await response
+        .json()
+        .catch(() => ({ message: `Image upload failed with status: ${response.status}` }))
+      throw new Error(errorData.message || `Image upload failed: ${response.status}`)
     }
 
     const result = await response.json()
 
-    if (result.success && result.path) {
-      // result.path is expected to be "relativePathOnServer/actualFilename.ext"
-      // The markdown requires a root-relative path like "/image/relativePathOnServer/actualFilename.ext"
-      return `/image/${result.path}` // Ensure the path is root-relative
+    if (result.success && result.imageId && result.fileName) {
+      // Construct the URL to access the image, based on the GET /image/{filename} endpoint
+      // This assumes the image will be accessible via this path structure immediately after upload.
+      const imageUrl = `/image/${result.fileName}` // Root-relative path for use in markdown or <img> src
+      return {
+        success: true,
+        message: result.message,
+        imageId: result.imageId,
+        imageUrl: imageUrl, // Return the directly usable URL
+      }
     } else {
-      throw new Error(result.message || 'Image upload failed due to server error')
+      throw new Error(result.message || 'Image upload failed: Invalid server response')
     }
   } catch (error) {
     console.error('Failed to upload image:', error)
-    // Re-throw the error so it can be caught by the calling function in the Vue component
-    if (error instanceof Error) {
-      throw error
+    const errorMessage =
+      error instanceof Error ? error.message : 'An unknown error occurred during image upload'
+    return { success: false, message: errorMessage } // Return a structured error
+  }
+}
+
+// Function to get an image by its filename
+// Based on API: GET /image/{filename}
+export async function getImageByFilename(filename: string): Promise<Blob | null> {
+  try {
+    const token = AuthService.getToken()
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+      // Add any other headers your backend might require for authenticated image access
     }
-    throw new Error('An unknown error occurred during image upload')
+
+    // The API endpoint is /image/{filename}
+    const response = await fetch(`/image/${encodeURIComponent(filename)}`, {
+      method: 'GET',
+      headers: headers,
+    })
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(`Image not found: ${filename}`)
+        return null
+      }
+      const errorText = await response
+        .text()
+        .catch(() => `Failed to fetch image ${filename} with status: ${response.status}`)
+      throw new Error(errorText)
+    }
+
+    // The response body is the raw image data
+    return await response.blob()
+  } catch (error) {
+    console.error(`Failed to fetch image ${filename}:`, error)
+    return null // Or re-throw if the caller should handle it more specifically
   }
 }

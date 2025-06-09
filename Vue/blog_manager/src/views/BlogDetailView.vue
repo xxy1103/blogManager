@@ -276,46 +276,49 @@ const cancelInfoUpdate = () => {
 }
 
 const executeInfoUpdate = async () => {
-  if (infoUpdateInProgress.value || !blog.value) return; // Ensure blog.value exists
+  if (infoUpdateInProgress.value || !blog.value) return // Ensure blog.value exists
 
-  infoUpdateInProgress.value = true;
-  updateMessage.value = null;
+  infoUpdateInProgress.value = true
+  updateMessage.value = null
 
   const blogMetadataToUpdate = {
     title: editForm.title,
     categories: editForm.categories,
-    tags: editForm.tagsString.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
+    tags: editForm.tagsString
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter((tag) => tag !== ''),
     saying: editForm.saying,
-  };
+  }
 
   try {
     // Pass blog.value.id and the metadata object
-    const result = await updateBlogMetadata(blog.value.id, blogMetadataToUpdate);
+    const result = await updateBlogMetadata(blog.value.id, blogMetadataToUpdate)
 
     if (result.success) {
-      updateMessage.value = { type: 'success', text: result.message };
+      updateMessage.value = { type: 'success', text: result.message }
       // Optionally, refresh blog data locally or re-fetch
       if (blog.value) {
-        blog.value.title = blogMetadataToUpdate.title;
-        blog.value.categories = blogMetadataToUpdate.categories;
-        blog.value.tags = blogMetadataToUpdate.tags;
-        blog.value.saying = blogMetadataToUpdate.saying;
+        blog.value.title = blogMetadataToUpdate.title
+        blog.value.categories = blogMetadataToUpdate.categories
+        blog.value.tags = blogMetadataToUpdate.tags
+        blog.value.saying = blogMetadataToUpdate.saying
       }
       setTimeout(() => {
-        showInfoUpdateModal.value = false;
-        updateMessage.value = null;
-      }, 1500);
+        showInfoUpdateModal.value = false
+        updateMessage.value = null
+      }, 1500)
     } else {
-      updateMessage.value = { type: 'error', text: result.message || '更新失败，请稍后再试。' };
+      updateMessage.value = { type: 'error', text: result.message || '更新失败，请稍后再试。' }
     }
   } catch (err) {
-    console.error('Error during blog info update:', err);
+    console.error('Error during blog info update:', err)
     updateMessage.value = {
       type: 'error',
       text: err instanceof Error ? `更新出错: ${err.message}` : '更新博客信息时发生未知错误。',
-    };
+    }
   } finally {
-    infoUpdateInProgress.value = false;
+    infoUpdateInProgress.value = false
   }
 }
 
