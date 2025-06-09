@@ -1,11 +1,11 @@
 <template>
-  <div class="register-container">
-    <div class="register-form">
-      <h2>注册博客管理系统</h2>
+  <div class="register-container main-content">
+    <div class="register-form card">
+      <h2 class="form-title">注册博客管理系统</h2>
 
-      <form @submit.prevent="handleRegister">
+      <form @submit.prevent="handleRegister" class="space-y-6">
         <div class="form-group">
-          <label for="username">用户名</label>
+          <label for="username" class="form-label">用户名</label>
           <input
             id="username"
             v-model="formData.username"
@@ -15,11 +15,12 @@
             placeholder="请输入用户名（3-50字符）"
             minlength="3"
             maxlength="50"
+            class="form-input"
           />
         </div>
 
         <div class="form-group">
-          <label for="email">邮箱地址</label>
+          <label for="email" class="form-label">邮箱地址</label>
           <input
             id="email"
             v-model="formData.email"
@@ -27,11 +28,12 @@
             required
             :disabled="loading"
             placeholder="请输入邮箱地址"
+            class="form-input"
           />
         </div>
 
         <div class="form-group">
-          <label for="password">密码</label>
+          <label for="password" class="form-label">密码</label>
           <input
             id="password"
             v-model="formData.password"
@@ -40,11 +42,12 @@
             :disabled="loading"
             placeholder="请输入密码（至少6位）"
             minlength="6"
+            class="form-input"
           />
         </div>
 
         <div class="form-group">
-          <label for="confirmPassword">确认密码</label>
+          <label for="confirmPassword" class="form-label">确认密码</label>
           <input
             id="confirmPassword"
             v-model="confirmPassword"
@@ -52,25 +55,26 @@
             required
             :disabled="loading"
             placeholder="请再次输入密码"
+            class="form-input"
           />
         </div>
 
-        <button type="submit" :disabled="loading" class="register-btn">
+        <button type="submit" :disabled="loading" class="btn primary-btn w-full">
           {{ loading ? '注册中...' : '注册' }}
         </button>
       </form>
 
       <div class="form-footer">
-        <p>已有账号？ <router-link to="/login">立即登录</router-link></p>
+        <p>已有账号？ <router-link to="/login" class="link">立即登录</router-link></p>
       </div>
 
       <!-- 错误消息 -->
-      <div v-if="errorMessage" class="error-message">
+      <div v-if="errorMessage" class="error-message alert alert-danger">
         {{ errorMessage }}
       </div>
 
       <!-- 成功消息 -->
-      <div v-if="successMessage" class="success-message">
+      <div v-if="successMessage" class="success-message alert alert-success">
         {{ successMessage }}
       </div>
     </div>
@@ -175,124 +179,154 @@ async function handleRegister() {
 
 <style scoped>
 .register-container {
-  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  min-height: calc(
+    100vh - var(--header-height, 0px) - var(--footer-height, 0px)
+  ); /* 减去页眉页脚高度 */
+  padding: 2rem;
+  background-color: var(--color-background-soft); /* 与 App.vue main-content 一致 */
 }
 
 .register-form {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-background-mute); /* 卡片背景色 */
+  padding: 2.5rem;
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-medium);
   width: 100%;
-  max-width: 450px;
+  max-width: 450px; /* 保持原有宽度或微调 */
+  border: 1px solid var(--color-border);
 }
 
-h2 {
+.form-title {
   text-align: center;
-  margin-bottom: 30px;
-  color: #333;
+  margin-bottom: 2rem;
+  color: var(--color-heading);
   font-weight: 600;
+  font-size: 1.75rem;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem; /* 略微调整间距 */
 }
 
-label {
+.form-label {
   display: block;
-  margin-bottom: 5px;
-  color: #555;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-soft);
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
-input[type='text'],
-input[type='email'],
-input[type='password'] {
+.form-input {
   width: 100%;
-  padding: 12px;
-  border: 2px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: border-color 0.3s;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-medium);
+  font-size: 1rem;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
   box-sizing: border-box;
 }
 
-input[type='text']:focus,
-input[type='email']:focus,
-input[type='password']:focus {
+.form-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2);
 }
 
-input:disabled {
-  background-color: #f5f5f5;
+.form-input:disabled {
+  background-color: var(--color-background-soft);
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.register-btn {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
+.btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--border-radius-medium);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition:
+    background-color 0.3s,
+    opacity 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: none;
 }
 
-.register-btn:hover:not(:disabled) {
-  opacity: 0.9;
+.primary-btn {
+  background-color: var(--color-primary);
+  color: white;
 }
 
-.register-btn:disabled {
+.primary-btn:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.primary-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.w-full {
+  width: 100%;
+}
+
 .form-footer {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 1.5rem;
 }
 
 .form-footer p {
-  color: #666;
+  color: var(--color-text-soft);
   margin: 0;
+  font-size: 0.9rem;
 }
 
-.form-footer a {
-  color: #667eea;
+.form-footer .link {
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
 }
 
-.form-footer a:hover {
+.form-footer .link:hover {
   text-decoration: underline;
 }
 
-.error-message {
-  background-color: #fee;
-  color: #c33;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 15px;
+.alert {
+  padding: 0.8rem 1rem;
+  margin-top: 1.5rem;
+  border-radius: var(--border-radius-medium);
+  font-size: 0.9rem;
   text-align: center;
-  border: 1px solid #fcc;
 }
 
-.success-message {
-  background-color: #efe;
-  color: #363;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 15px;
-  text-align: center;
-  border: 1px solid #cfc;
+.alert-danger {
+  background-color: rgba(var(--color-danger-rgb), 0.1);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.alert-success {
+  background-color: rgba(var(--color-success-rgb), 0.1);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .register-form {
+    padding: 2rem;
+  }
+  .form-title {
+    font-size: 1.5rem;
+  }
 }
 </style>

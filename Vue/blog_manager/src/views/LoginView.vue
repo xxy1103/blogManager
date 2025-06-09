@@ -1,11 +1,11 @@
 <template>
-  <div class="login-container">
-    <div class="login-form">
-      <h2>登录博客管理系统</h2>
+  <div class="login-container main-content">
+    <div class="login-form card">
+      <h2 class="form-title">登录博客管理系统</h2>
 
-      <form @submit.prevent="handleLogin">
+      <form @submit.prevent="handleLogin" class="space-y-6">
         <div class="form-group">
-          <label for="username">用户名</label>
+          <label for="username" class="form-label">用户名</label>
           <input
             id="username"
             v-model="formData.username"
@@ -13,11 +13,12 @@
             required
             :disabled="loading"
             placeholder="请输入用户名"
+            class="form-input"
           />
         </div>
 
         <div class="form-group">
-          <label for="password">密码</label>
+          <label for="password" class="form-label">密码</label>
           <input
             id="password"
             v-model="formData.password"
@@ -25,25 +26,26 @@
             required
             :disabled="loading"
             placeholder="请输入密码"
+            class="form-input"
           />
         </div>
 
-        <button type="submit" :disabled="loading" class="login-btn">
+        <button type="submit" :disabled="loading" class="btn primary-btn w-full">
           {{ loading ? '登录中...' : '登录' }}
         </button>
       </form>
 
       <div class="form-footer">
-        <p>还没有账号？ <router-link to="/register">立即注册</router-link></p>
+        <p>还没有账号？ <router-link to="/register" class="link">立即注册</router-link></p>
       </div>
 
       <!-- 错误消息 -->
-      <div v-if="errorMessage" class="error-message">
+      <div v-if="errorMessage" class="error-message alert alert-danger">
         {{ errorMessage }}
       </div>
 
       <!-- 成功消息 -->
-      <div v-if="successMessage" class="success-message">
+      <div v-if="successMessage" class="success-message alert alert-success">
         {{ successMessage }}
       </div>
     </div>
@@ -106,122 +108,154 @@ async function handleLogin() {
 
 <style scoped>
 .login-container {
-  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  min-height: calc(
+    100vh - var(--header-height, 0px) - var(--footer-height, 0px)
+  ); /* 减去页眉页脚高度 */
+  padding: 2rem;
+  background-color: var(--color-background-soft); /* 与 App.vue main-content 一致 */
 }
 
 .login-form {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-background-mute); /* 卡片背景色 */
+  padding: 2.5rem;
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-medium);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px; /* 稍微增大宽度 */
+  border: 1px solid var(--color-border);
 }
 
-h2 {
+.form-title {
   text-align: center;
-  margin-bottom: 30px;
-  color: #333;
+  margin-bottom: 2rem; /* 增大间距 */
+  color: var(--color-heading);
   font-weight: 600;
+  font-size: 1.75rem; /* 增大标题字号 */
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem; /* 增大间距 */
 }
 
-label {
+.form-label {
   display: block;
-  margin-bottom: 5px;
-  color: #555;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-soft); /* 标签颜色调整 */
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
-input[type='text'],
-input[type='password'] {
+.form-input {
   width: 100%;
-  padding: 12px;
-  border: 2px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: border-color 0.3s;
+  padding: 0.8rem 1rem; /* 调整内边距 */
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-medium);
+  font-size: 1rem;
+  background-color: var(--color-background); /* 输入框背景 */
+  color: var(--color-text);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
   box-sizing: border-box;
 }
 
-input[type='text']:focus,
-input[type='password']:focus {
+.form-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2); /* 聚焦效果 */
 }
 
-input:disabled {
-  background-color: #f5f5f5;
+.form-input:disabled {
+  background-color: var(--color-background-soft);
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
+.btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--border-radius-medium);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition:
+    background-color 0.3s,
+    opacity 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: none;
 }
 
-.login-btn:hover:not(:disabled) {
-  opacity: 0.9;
+.primary-btn {
+  background-color: var(--color-primary);
+  color: white;
 }
 
-.login-btn:disabled {
+.primary-btn:hover:not(:disabled) {
+  background-color: var(--color-primary-dark); /* 鼠标悬停颜色 */
+}
+
+.primary-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.w-full {
+  width: 100%;
+}
+
 .form-footer {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 1.5rem; /* 调整间距 */
 }
 
 .form-footer p {
-  color: #666;
+  color: var(--color-text-soft);
   margin: 0;
+  font-size: 0.9rem;
 }
 
-.form-footer a {
-  color: #667eea;
+.form-footer .link {
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
 }
 
-.form-footer a:hover {
+.form-footer .link:hover {
   text-decoration: underline;
 }
 
-.error-message {
-  background-color: #fee;
-  color: #c33;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 15px;
+.alert {
+  padding: 0.8rem 1rem;
+  margin-top: 1.5rem;
+  border-radius: var(--border-radius-medium);
+  font-size: 0.9rem;
   text-align: center;
-  border: 1px solid #fcc;
 }
 
-.success-message {
-  background-color: #efe;
-  color: #363;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 15px;
-  text-align: center;
-  border: 1px solid #cfc;
+.alert-danger {
+  background-color: rgba(var(--color-danger-rgb), 0.1);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.alert-success {
+  background-color: rgba(var(--color-success-rgb), 0.1);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .login-form {
+    padding: 2rem;
+  }
+  .form-title {
+    font-size: 1.5rem;
+  }
 }
 </style>
