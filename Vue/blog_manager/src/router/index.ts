@@ -32,14 +32,14 @@ const router = createRouter({
       component: BlogListView,
     },
     {
-      path: '/blog/:year/:month/:day/:filename',
+      path: '/blog/:id', // 修改路径以匹配 ID
       name: 'blog-detail',
       component: BlogDetailView,
       props: true, // 将路由参数作为 props 传递给组件
     },
     {
       // 新增的编辑路由
-      path: '/blog/:year/:month/:day/:filename/edit',
+      path: '/blog/:id/edit', // 修改路径以匹配 ID
       name: 'blog-edit-standalone',
       component: BlogEditStandaloneView,
       props: true,

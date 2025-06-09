@@ -144,25 +144,28 @@ const fetchBlog = async () => {
   error.value = null
   blog.value = null
 
-  const { year, month, day, filename } = route.params
-  if (
-    Array.isArray(year) ||
-    Array.isArray(month) ||
-    Array.isArray(day) ||
-    Array.isArray(filename)
-  ) {
-    error.value = '无效的博客链接参数'
+  const idParam = route.params.id
+  console.log('BlogDetailView received idParam:', idParam)
+
+  if (typeof idParam !== 'string' || idParam === 'undefined' || !idParam) {
+    error.value = '无效或未提供博客 ID'
     loading.value = false
+    console.error('Invalid or missing blog ID from route params:', idParam)
+    return
+  }
+
+  const numericId = parseInt(idParam, 10)
+  console.log('Parsed numericId:', numericId)
+
+  if (isNaN(numericId)) {
+    error.value = '博客 ID 格式无效'
+    loading.value = false
+    console.error('Invalid blog ID format after parsing:', idParam)
     return
   }
 
   try {
-    const fetchedBlog = await getBlogDetail(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-    )
+    const fetchedBlog = await getBlogDetail(numericId) // Use numericId
     if (fetchedBlog) {
       blog.value = fetchedBlog
     } else {
@@ -174,14 +177,18 @@ const fetchBlog = async () => {
     } else {
       error.value = '加载博客详情失败，请稍后再试。'
     }
-    console.error(err)
+    console.error('Error in fetchBlog:', err)
   } finally {
     loading.value = false
   }
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
+const formatDate = (dateTimeString: string | undefined) => {
+  // Changed parameter to dateTimeString
+  if (!dateTimeString) {
+    return '日期不可用'
+  }
+  const date = new Date(dateTimeString)
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
@@ -193,10 +200,9 @@ const formatDate = (dateString: string) => {
 
 const navigateToEditPage = () => {
   if (!blog.value) return
-  const { year, month, day, filename } = route.params
   router.push({
     name: 'blog-edit-standalone',
-    params: { year, month, day, filename },
+    params: { id: blog.value.id.toString() }, // Use blog.id and convert to string
   })
 }
 
@@ -329,16 +335,13 @@ onMounted(() => {
 })
 
 watch(
-  () => route.params,
-  (newParams: RouteParams, oldParams: RouteParams) => {
-    // 确保 filename 存在且发生变化, 或者其他关键参数发生变化
-    const newKey = `${newParams.year}-${newParams.month}-${newParams.day}-${newParams.filename}`
-    const oldKey = `${oldParams.year}-${oldParams.month}-${oldParams.day}-${oldParams.filename}`
-    if (newParams.filename && newKey !== oldKey) {
+  () => route.params.id, // Watch the 'id' param specifically
+  (newId, oldId) => {
+    console.log('Route ID changed from', oldId, 'to', newId)
+    if (newId && newId !== oldId && typeof newId === 'string' && newId !== 'undefined') {
       fetchBlog()
     }
   },
-  { deep: true },
 )
 </script>
 

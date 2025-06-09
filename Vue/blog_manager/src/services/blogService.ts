@@ -1,4 +1,5 @@
 import type { BlogListItem, BlogDetail } from '../types/blog'
+import { AuthService } from './authService.js' // 导入 AuthService
 
 const API_BASE_URL = '/api' // 使用相对路径，将通过 Vite 代理转发
 
@@ -21,7 +22,15 @@ export function processBlogContentForDisplay(content: string): string {
 
 export async function getAllBlogs(): Promise<BlogListItem[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/blogs/lists`)
+    const token = AuthService.getToken() // 获取认证令牌
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_BASE_URL}/blogs/lists`, {
+      headers: headers, // 添加请求头
+    })
     if (!response.ok) {
       throw new Error('Network response was not ok')
     }
@@ -38,33 +47,45 @@ export async function getAllBlogs(): Promise<BlogListItem[]> {
   }
 }
 
-export async function getBlogDetail(
-  year: string,
-  month: string,
-  day: string,
-  filename: string,
-): Promise<BlogDetail | null> {
+export async function getBlogDetail(id: number): Promise<BlogDetail | null> {
   try {
-    // URL 编码文件名以处理特殊字符
-    const encodedFilename = encodeURIComponent(filename)
-    const response = await fetch(
-      `${API_BASE_URL}/blogs/${year}/${month}/${day}/${encodedFilename}/`,
-    )
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
+    const token = AuthService.getToken()
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
     }
+
+    const response = await fetch(`${API_BASE_URL}/blogs/${id}`, {
+      headers: headers,
+    })
+
+    if (!response.ok) {
+      let errorMsg = `Network response was not ok (${response.status})`
+      try {
+        const errorData = await response.json()
+        if (errorData && (errorData.error || errorData.message)) {
+          errorMsg = errorData.error || errorData.message
+        }
+      } catch {
+        /* ignore parsing error if response is not json */
+      }
+      console.error('Error fetching blog detail:', errorMsg)
+      return null
+    }
+
     const result: ApiResponse<BlogDetail> = await response.json()
+
     if (result.status === 0 && result.data) {
       if (result.data.content) {
         result.data.content = processBlogContentForDisplay(result.data.content)
       }
       return result.data
     } else {
-      console.error('Error fetching blog detail:', result.error)
+      console.error('API error fetching blog detail:', result.error || 'Unknown API error')
       return null
     }
   } catch (error) {
-    console.error('Failed to fetch blog detail:', error)
+    console.error('Exception in getBlogDetail:', (error as Error).message)
     return null
   }
 }

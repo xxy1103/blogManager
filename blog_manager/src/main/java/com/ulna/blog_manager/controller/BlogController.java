@@ -51,6 +51,7 @@ public class BlogController {
      */
     @GetMapping("/lists")
     public Message listUserBlogs() {
+        System.out.println("获取用户博客列表");
         try {
             User currentUser = getCurrentUser();
             logger.info("获取用户 {} 的博客列表", currentUser.getUsername());
@@ -70,6 +71,7 @@ public class BlogController {
      */
     @GetMapping("/{id}")
     public Message getBlogById(@PathVariable Long id) {
+        System.out.println("获取博客详情，ID: " + id);
         try {
             User currentUser = getCurrentUser();
             logger.info("用户 {} 获取博客 {}", currentUser.getUsername(), id);

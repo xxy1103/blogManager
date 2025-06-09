@@ -25,7 +25,7 @@
 
     <div class="blog-list-container">
       <ul v-if="!loading && !error && blogs.length > 0" class="blog-list">
-        <li v-for="blog in blogs" :key="blog.filename" class="blog-item">
+        <li v-for="blog in blogs" :key="blog.id" class="blog-item">
           <div class="blog-item-content">
             <div class="blog-thumbnail-container">
               <img src="../assets/logo.svg" class="blog-thumbnail" alt="Blog thumbnail" />
@@ -86,22 +86,14 @@ const fetchBlogs = async () => {
 }
 
 const getBlogDetailLink = (blog: BlogListItem) => {
-  // 解析 ISO 格式的日期字符串 (如 "2025-04-25T23:10:05")
-  const date = new Date(blog.date)
-  const year = date.getFullYear()
-  // getMonth() 返回 0-11，需要 +1
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  // URL 编码文件名以处理特殊字符
-  const encodedFilename = encodeURIComponent(blog.filename)
-  return `/blog/${year}/${month}/${day}/${encodedFilename}`
+  return `/blog/${blog.id}` // Use blog.id for the link
 }
 
-const formatDate = (dateString: string) => {
-  // ISO 格式的日期字符串可以直接传递给 Date 构造函数
-  const date = new Date(dateString)
-  // 格式化日期和时间
+const formatDate = (dateTimeString: string | undefined) => {
+  if (!dateTimeString) {
+    return '日期不可用'
+  }
+  const date = new Date(dateTimeString)
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
