@@ -131,36 +131,65 @@ export async function updateBlogContent(
   }
 }
 
+// 根据API文档 2.3 创建博客
 export async function addBlog(
   title: string,
   categories: string,
   tags: string[],
   saying: string,
-): Promise<{ success: boolean; message: string; filename?: string }> {
+  content: string, // 确保 content 参数已定义
+): Promise<{ success: boolean; message: string; data?: null }> {
+  // API响应 data 为 null
   try {
-    const queryParams = new URLSearchParams({
+    const token = AuthService.getToken()
+    if (!token) {
+      return { success: false, message: '用户未认证' }
+    }
+
+    const blogData = {
       title,
       categories,
+      tags,
       saying,
-    })
-    tags.forEach((tag) => queryParams.append('tags', tag))
-
-    const response = await fetch(`${API_BASE_URL}/blogs/add?${queryParams.toString()}`)
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
+      content, // 使用传入的 content 参数
     }
-    const result: ApiResponse<{ filename: string }> = await response.json() // Assuming API returns filename
+
+    const response = await fetch(`${API_BASE_URL}/blogs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(blogData),
+    })
+
+    if (!response.ok) {
+      let errorMsg = `Network response was not ok (${response.status})`
+      try {
+        const errorData = await response.json()
+        if (errorData && (errorData.error || errorData.message)) {
+          errorMsg = errorData.error || errorData.message
+        }
+      } catch {
+        // ignore parsing error if response is not json
+      }
+      console.error('Error adding blog:', errorMsg)
+      return { success: false, message: errorMsg }
+    }
+
+    const result: ApiResponse<null> = await response.json() // API响应 data 为 null
+
     if (result.status === 0) {
-      return { success: true, message: '添加博客成功', filename: result.data?.filename }
+      return { success: true, message: '博客创建成功' }
     } else {
       console.error('Error adding blog:', result.error)
-      return { success: false, message: result.error || '添加博客失败' }
+      return { success: false, message: result.error || '创建博客失败' }
     }
   } catch (error) {
     console.error('Failed to add blog:', error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : '添加博客失败',
+      message: error instanceof Error ? error.message : '创建博客失败',
     }
   }
 }

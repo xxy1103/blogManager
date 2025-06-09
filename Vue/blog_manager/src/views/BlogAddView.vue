@@ -62,6 +62,17 @@
           ></textarea>
         </div>
 
+        <div class="form-group">
+          <label for="content">内容</label>
+          <textarea
+            id="content"
+            v-model="formData.content"
+            rows="10"
+            required
+            placeholder="请输入博客内容"
+          ></textarea>
+        </div>
+
         <div class="form-actions">
           <button type="submit" class="submit-button" :disabled="submitting">
             <span v-if="submitting" class="spinning-icon">⟳</span>
@@ -94,6 +105,7 @@ const formData = reactive({
   categories: '',
   tags: [] as string[],
   saying: '',
+  content: '', // 新增 content 字段
 })
 
 const formMessage = reactive({
@@ -124,6 +136,14 @@ const submitForm = async () => {
     return
   }
 
+  // 验证内容是否为空
+  if (!formData.content.trim()) {
+    formMessage.text = '博客内容不能为空'
+    formMessage.type = 'error'
+    formMessage.show = true
+    return
+  }
+
   submitting.value = true
   formMessage.show = false
 
@@ -133,6 +153,7 @@ const submitForm = async () => {
       formData.categories,
       formData.tags,
       formData.saying,
+      formData.content, // 使用 formData 中的 content
     )
 
     if (result.success) {
@@ -145,6 +166,7 @@ const submitForm = async () => {
       formData.categories = ''
       formData.tags = []
       formData.saying = ''
+      formData.content = '' // 重置 content 字段
 
       // 延迟后重定向到博客列表页
       setTimeout(() => {
