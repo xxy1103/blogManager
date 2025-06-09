@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客管理系统 - 项目架构概览</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 20px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            margin-bottom: 30px;
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+
+        .section h3 {
+            color: #34495e;
+            margin: 20px 0 15px 0;
+            font-size: 1.3em;
+        }
+
+        .mermaid {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card h4 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-card li {
+            padding: 5px 0;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .feature-card li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #00b894;
+            font-weight: bold;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .tech-tag {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .flow-diagram {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .flow-step:hover {
+            transform: scale(1.02);
+        }
+
+        .step-number {
+            background: #6c5ce7;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .advantages {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .advantages h4 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .advantages ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .advantages li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .advantages li:before {
+            content: "🚀";
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            border-left: 5px solid #e17055;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .highlight-box strong {
+            color: #2d3436;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🏗️ 博客管理系统</h1>
+            <p>项目架构概览 | 分层设计 | 技术架构</p>
+        </div>
+
+        <!-- 系统概览 -->
+        <div class="section">
+            <h2>📋 系统架构概览</h2>
+            <div class="highlight-box">
+                <strong>系统简介：</strong>基于 Spring Boot 的博客管理系统，采用分层架构设计，集成 LLM 智能对话功能，支持 Markdown 博客管理和图片存储。
+            </div>
+            
+            <div class="mermaid">
+graph TB
+    subgraph "🎯 表现层"
+        BC[博客控制器]
+        LC[LLM控制器]
+        CC[配置控制器]
+        IC[图片控制器]
+    end
+    
+    subgraph "⚙️ 业务层"
+        BFS[博客服务]
+        CS[配置服务]
+        LLM[LLM服务]
+    end
+    
+    subgraph "💾 数据层"
+        FS[文件系统]
+        API[LLM API]
+    end
+    
+    BC --> BFS
+    LC --> LLM
+    CC --> CS
+    IC --> CS
+    
+    BFS --> FS
+    CS --> FS
+    LLM --> API
+    
+    style BC fill:#e3f2fd
+    style LC fill:#e3f2fd
+    style CC fill:#e3f2fd
+    style IC fill:#e3f2fd
+    
+    style BFS fill:#e8f5e8
+    style CS fill:#e8f5e8
+    style LLM fill:#e8f5e8
+    
+    style FS fill:#fff3e0
+    style API fill:#fff3e0
+            </div>
+        </div>
+
+        <!-- 核心功能模块 -->
+        <div class="section">
+            <h2>🔧 核心功能模块</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>📝 博客管理</h4>
+                    <ul>
+                        <li>Markdown 文件读写</li>
+                        <li>博客元数据解析</li>
+                        <li>全文搜索功能</li>
+                        <li>分类标签管理</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🤖 智能对话</h4>
+                    <ul>
+                        <li>多 LLM 平台支持</li>
+                        <li>流式响应处理</li>
+                        <li>工厂模式设计</li>
+                        <li>异步消息处理</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🖼️ 媒体管理</h4>
+                    <ul>
+                        <li>图片上传存储</li>
+                        <li>文件路径管理</li>
+                        <li>静态资源访问</li>
+                        <li>配置化存储路径</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>⚙️ 系统配置</h4>
+                    <ul>
+                        <li>JSON 配置管理</li>
+                        <li>API 密钥配置</li>
+                        <li>存储路径配置</li>
+                        <li>动态配置更新</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技术栈 -->
+        <div class="section">
+            <h2>🛠️ 技术栈</h2>
+            <div class="tech-stack">
+                <span class="tech-tag">Spring Boot</span>
+                <span class="tech-tag">Maven</span>
+                <span class="tech-tag">RESTful API</span>
+                <span class="tech-tag">SSE</span>
+                <span class="tech-tag">Markdown</span>
+                <span class="tech-tag">JSON</span>
+                <span class="tech-tag">工厂模式</span>
+                <span class="tech-tag">分层架构</span>
+            </div>
+        </div>
+
+        <!-- 简化类图 -->
+        <div class="section">
+            <h2>🏗️ 简化类图</h2>
+            <div class="mermaid">
+classDiagram
+    %% 控制器层
+    class BlogController {
+        +getAllBlogs()
+        +saveBlog()
+        +deleteBlog()
+        +searchBlogs()
+    }
+    
+    class LLMController {
+        +streamChat()
+        +generateResponse()
+    }
+    
+    class ConfigController {
+        +getConfig()
+        +updateConfig()
+    }
+    
+    %% 服务层
+    class BlogFileService {
+        +loadAllBlogs()
+        +saveBlog()
+        +deleteBlog()
+    }
+    
+    class LLM {
+        <<abstract>>
+        +streamResponse()
+        +generateResponse()
+    }
+    
+    class LLMFactory {
+        +createLLM()
+    }
+    
+    class ConfigService {
+        +getConfig()
+        +updateConfig()
+    }
+    
+    %% 实体层
+    class Blog {
+        -title: String
+        -content: String
+        -dateTime: LocalDateTime
+        -tags: String[]
+    }
+    
+    class Config {
+        -blogStoragePath: String
+        -imageStoragePath: String
+        -apiKeys: Map
+    }
+    
+    class Message {
+        -status: int
+        -data: Object
+        -error: String
+    }
+    
+    %% 关系
+    BlogController --> BlogFileService
+    BlogController --> Blog
+    BlogController --> Message
+    
+    LLMController --> LLM
+    LLMController --> LLMFactory
+    
+    ConfigController --> ConfigService
+    ConfigController --> Config
+    
+    BlogFileService --> Blog
+    BlogFileService --> Config
+    
+    LLMFactory --> LLM
+    ConfigService --> Config
+    
+    style BlogController fill:#e3f2fd
+    style LLMController fill:#e3f2fd
+    style ConfigController fill:#e3f2fd
+    
+    style BlogFileService fill:#e8f5e8
+    style LLM fill:#e8f5e8
+    style LLMFactory fill:#e8f5e8
+    style ConfigService fill:#e8f5e8
+    
+    style Blog fill:#fff3e0
+    style Config fill:#fff3e0
+    style Message fill:#fff3e0
+            </div>
+        </div>
+
+        <!-- 数据流程 -->
+        <div class="section">
+            <h2>🔄 典型业务流程</h2>
+            
+            <h3>📖 博客查询流程</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div>客户端发送 GET /api/blogs 请求</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div>BlogController 接收请求，调用 BlogFileService</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div>BlogFileService 读取文件系统中的 Markdown 文件</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div>解析文件内容，创建 Blog 对象列表</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div>封装为 Message 对象，返回 JSON 响应</div>
+                </div>
+            </div>
+
+            <h3>💬 LLM 对话流程</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div>客户端发送 POST /api/llm/stream 请求</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div>LLMController 通过工厂创建 LLM 实例</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div>LLM 服务调用第三方 API</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div>使用 SSE 向客户端返回流式响应</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 架构优势 -->
+        <div class="section">
+            <h2>✨ 架构优势</h2>
+            <div class="advantages">
+                <h4>🎯 设计优势</h4>
+                <ul>
+                    <li>分层清晰，职责明确，易于维护</li>
+                    <li>工厂模式支持多 LLM 平台扩展</li>
+                    <li>基于文件系统，部署简单</li>
+                    <li>RESTful API 设计，前后端分离</li>
+                    <li>流式响应提供更好的用户体验</li>
+                    <li>配置化管理，灵活可配置</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- API 概览 -->
+        <div class="section">
+            <h2>🌐 API 接口概览</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>📝 博客 API</h4>
+                    <ul>
+                        <li>GET /api/blogs - 获取所有博客</li>
+                        <li>POST /api/blogs - 保存博客</li>
+                        <li>DELETE /api/blogs/{title} - 删除博客</li>
+                        <li>POST /api/blogs/search - 搜索博客</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🤖 LLM API</h4>
+                    <ul>
+                        <li>POST /api/llm/chat - 普通对话</li>
+                        <li>POST /api/llm/stream - 流式对话</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>⚙️ 配置 API</h4>
+                    <ul>
+                        <li>GET /api/config - 获取配置</li>
+                        <li>PUT /api/config - 更新配置</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🖼️ 图片 API</h4>
+                    <ul>
+                        <li>GET /api/images/{filename} - 获取图片</li>
+                        <li>POST /api/images/upload - 上传图片</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 项目信息 -->
+        <div class="section">
+            <h2>📊 项目信息</h2>
+            <div class="highlight-box">
+                <p><strong>生成时间：</strong>2025年6月9日</p>
+                <p><strong>项目类型：</strong>Spring Boot Web 应用</p>
+                <p><strong>架构模式：</strong>分层架构 + 工厂模式</p>
+                <p><strong>主要特性：</strong>博客管理、LLM集成、文件存储、配置管理</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#74b9ff',
+                primaryTextColor: '#2d3436',
+                primaryBorderColor: '#0984e3',
+                lineColor: '#636e72',
+                secondaryColor: '#a29bfe',
+                tertiaryColor: '#fd79a8'
+            }
+        });
+    </script>
+</body>
+</html>

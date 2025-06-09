@@ -1,475 +1,483 @@
-# 博客管理系统API文档
+# 博客管理系统 API 文档
 
-本文档详细说明了博客管理系统的所有API端点、请求参数和返回数据格式。
+## 项目概述
 
-## 通用说明
+这是一个基于Spring Boot的博客管理系统，提供用户认证、博客管理、图片上传、LLM集成等功能。
 
-所有API返回的数据格式为JSON，结构如下：
+### 技术栈
+
+- **框架**: Spring Boot 3.4.5
+- **数据库**: MySQL + Spring Data JPA
+- **安全**: Spring Security + JWT
+- **文件上传**: MultipartFile
+- **LLM集成**: 支持XModel和BigModel
+- **Java版本**: 17
+
+### 服务器配置
+
+- **端口**: 5200
+- **基础URL**: `http://localhost:5200`
+
+---
+
+## API 接口文档
+
+### 1. 用户认证模块 (`/api/auth`)
+
+#### 1.1 用户注册
+
+- **URL**: `POST /api/auth/register`
+- **描述**: 注册新用户
+- **请求体**:
 
 ```json
 {
-  "status": 0,    // 状态码，0表示成功，1表示失败
-  "data": object, // 返回的数据对象，失败时为null
-  "error": string // 错误信息，成功时为null
+  "username": "string", // 用户名
+  "email": "string", // 邮箱
+  "password": "string" // 密码
 }
 ```
 
-## API列表
+- **响应**:
 
-### 1. 获取所有博客列表
+```json
+{
+  "message": "用户注册成功!"
+}
+```
 
-获取系统中所有博客的基本信息列表。
+- **错误响应**:
 
-- **URL**: `/api/blogs/lists`
-- **方法**: GET
-- **参数**: 无
-- **成功响应**:
-  ```json
-  {
-    "status": 0,
-    "data": [
-      {
-        "title": "博客标题",
-        "filename": "博客文件名.md",
-        "categories": "分类",
-        "tags": ["标签1", "标签2"],
-        "saying": "摘要",
-        "date": "2023-01-01 12:00:00"
-      },
-      // 更多博客...
-    ],
-    "error": null
-  }
-  ```
-- **失败响应**:
-  ```json
-  {
-    "status": 1,
-    "data": null,
-    "error": "获取博客文件名失败"
-  }
-  ```
+```json
+{
+  "message": "错误: 用户名已被使用!"
+}
+```
 
-### 2. 获取博客详情
+#### 1.2 用户登录
 
-根据日期和文件名获取特定博客的完整内容。
+- **URL**: `POST /api/auth/login`
+- **描述**: 用户登录获取JWT令牌
+- **请求体**:
 
-- **URL**: `/api/blogs/{year}/{month}/{day}/{filename}/`
-- **方法**: GET
-- **参数**:
-  - `year`: 博客发布年份
-  - `month`: 博客发布月份
-  - `day`: 博客发布日期
-  - `filename`: 博客文件名
-- **成功响应**:
-  ```json
-  {
-    "status": 0,
-    "data": {
+```json
+{
+  "username": "string", // 用户名
+  "password": "string" // 密码
+}
+```
+
+- **响应**:
+
+```json
+{
+  "accessToken": "jwt_token_string",
+  "tokenType": "Bearer",
+  "id": 1,
+  "username": "用户名",
+  "email": "邮箱地址"
+}
+```
+
+---
+
+### 2. 博客管理模块 (`/api/blogs`)
+
+#### 2.1 获取博客列表
+
+- **URL**: `GET /api/blogs/lists`
+- **描述**: 获取当前用户的所有博客
+- **响应**:
+
+```json
+{
+  "status": 0,
+  "data": [
+    {
+      "id": 1,
       "title": "博客标题",
-      "filename": "博客文件名.md",
-      "filepath": "博客文件路径",
+      "filename": "文件名.md",
       "categories": "分类",
       "tags": ["标签1", "标签2"],
-      "saying": "摘要",
-      "date": "2023-01-01 12:00:00",
-      "content": "博客完整内容..."
-    },
-    "error": null
-  }
-  ```
-- **失败响应**:
-  ```json
-  {
-    "status": 1,
-    "data": null,
-    "error": "未找到博客"
-  }
-  ```
-
-### 3. 更新博客信息
-
-更新博客的基本信息（标题、分类、标签、摘要）。
-
-- **URL**: `/api/blogs/{year}/{month}/{day}/{filename}/updateinfo`
-- **方法**: GET
-- **参数**:
-  - `year`: 博客发布年份
-  - `month`: 博客发布月份
-  - `day`: 博客发布日期
-  - `filename`: 博客文件名
-  - `title`: 新的博客标题
-  - `categories`: 新的博客分类
-  - `tags`: 新的博客标签数组
-  - `saying`: 新的博客摘要
-- **成功响应**:
-  ```json
-  {
-    "status": 0,
-    "data": null,
-    "error": "更新博客成功"
-  }
-  ```
-- **失败响应**:
-  ```json
-  {
-    "status": 1,
-    "data": null,
-    "error": "更新博客失败"
-  }
-  ```
-
-### 4. 更新博客内容
-
-更新特定博客的正文内容。
-
-- **URL**: `/api/blogs/{year}/{month}/{day}/{filename}/updatecontent`
-- **方法**: POST
-- **参数**:
-  - `year`: 博客发布年份
-  - `month`: 博客发布月份
-  - `day`: 博客发布日期
-  - `filename`: 博客文件名
-  - 请求体: 新的博客内容文本
-- **成功响应**:
-  ```json
-  {
-    "status": 0,
-    "data": null,
-    "error": "更新博客内容成功"
-  }
-  ```
-- **失败响应**:
-  ```json
-  {
-    "status": 1,
-    "data": null,
-    "error": "更新博客内容失败"
-  }
-  ```
-
-### 5. 添加新博客
-
-创建一个新的博客。
-
-- **URL**: `/api/blogs/add`
-- **方法**: GET
-- **参数**:
-  - `title`: 博客标题
-  - `categories`: 博客分类
-  - `tags`: 博客标签数组
-  - `saying`: 博客摘要
-- **成功响应**:
-  ```json
-  {
-    "status": 0,
-    "data": null,
-    "error": "添加博客成功"
-  }
-  ```
-- **失败响应**:
-  ```json
-  {
-    "status": 1,
-    "data": null,
-    "error": "添加博客失败"
-  }
-  ```
-
-### 6. 删除博客
-
-删除特定的博客。
-
-- **URL**: `/api/blogs/{year}/{month}/{day}/{filename}/delete/`
-- **方法**: GET
-- **参数**:
-  - `year`: 博客发布年份
-  - `month`: 博客发布月份
-  - `day`: 博客发布日期
-  - `filename`: 博客文件名
-- **成功响应**:
-  ```json
-  {
-    "status": 0,
-    "data": null,
-    "error": "删除博客成功"
-  }
-  ```
-- **失败响应**:
-  ```json
-  {
-    "status": 1,
-    "data": null,
-    "error": "删除博客失败"
-  }
-  ```
-
-### 7. 获取图片资源
-
-根据相对路径获取图片资源，直接返回图片文件而不是JSON。
-
-- **URL**: `/image/{relativePath}`
-- **方法**: GET
-- **参数**:
-  - `relativePath`: 图片的相对路径，例如 "image/计算机网络第五章--网络层_20250425_151005/1745565448467.png"
-- **成功响应**:
-  - 直接返回图片文件，Content-Type 会根据图片类型自动设置（如 image/png, image/jpeg 等）
-- **失败响应**:
-  - HTTP 404 Not Found: 如果图片不存在
-  - HTTP 400 Bad Request: 如果请求处理过程中出现异常
-
-### 8. 上传图片
-
-将图片上传到服务器的指定相对路径中。
-
-- **URL**: `/image/upload`
-- **方法**: POST
-- **Content-Type**: `multipart/form-data`
-- **参数**:
-  - `file`: 要上传的图片文件（表单文件字段）
-  - `relativePath`: 保存图片的相对路径，如 "计算机网络第五章--网络层_20250425_151005"
-- **成功响应**:
-  ```json
-  {
-    "success": true,
-    "message": "图片上传成功",
-    "path": "计算机网络第五章--网络层_20250425_151005/example.png"
-  }
-  ```
-- **失败响应**:
-  ```json
-  {
-    "success": false,
-    "message": "上传图片失败: 错误信息"
-  }
-  ```
-
-### 9. 获取系统配置
-
-获取系统的当前配置信息。
-
-- **URL**: `/config/get`
-- **方法**: GET
-- **参数**: 无
-- **成功响应**:
-  ```json
-  {
-    "blogStoragePath": "/path/to/blog/storage",
-    "imageStoragePath": "/path/to/image/storage",
-    "XModelAPIKey": "api-key-value"
-  }
-  ```
-- **失败响应**: 
-  - HTTP 500 Internal Server Error: 如果在获取配置过程中出现异常
-
-### 10. 更新系统配置
-
-更新系统的配置信息。
-
-- **URL**: `/config/set`
-- **方法**: POST
-- **Content-Type**: `application/json`
-- **请求体**:
-  ```json
-  {
-    "blogStoragePath": "/new/path/to/blog/storage",
-    "imageStoragePath": "/new/path/to/image/storage",
-    "XModelAPIKey": "new-api-key-value"
-  }
-  ```
-- **成功响应**: 
-  - `true`: 配置更新成功
-  - `false`: 配置更新失败
-- **失败响应**: 
-  - HTTP 400 Bad Request: 如果请求体格式不正确
-  - HTTP 500 Internal Server Error: 如果在更新配置过程中出现异常
-
-### 11. 设置LLM类型
-
-根据提供的类型设置当前使用的LLM模型。
-
-- **URL**: `/llm/set`
-- **方法**: GET
-- **参数**:
-  - `llmType`: LLM的类型 (例如: "XModel", "BigModel")
-- **成功响应**: 无特定响应内容，HTTP 200 OK
-- **失败响应**:
-  - HTTP 500 Internal Server Error: 如果LLM类型不受支持或设置失败。
-
-### 12. 获取当前LLM类型
-
-获取当前正在使用的LLM模型的名称。
-
-- **URL**: `/llm/get`
-- **方法**: GET
-- **参数**: 无
-- **成功响应**:
-  ```json
-  {
-    "status": 0, // 假设成功时返回类似结构，或者直接返回字符串
-    "data": "XModel", // 当前LLM的名称，例如 "XModel" 或 "BigModel"
-    "error": null
-  }
-  ```
-  或者直接返回: `XModel`
-- **失败响应**:
-  - `null` 或错误信息字符串，如果LLM未设置。
-
-### 13. 获取LLM建议（非流式）
-
-向LLM发送提示并获取非流式响应的建议。
-
-- **URL**: `/llm/getsuggestion`
-- **方法**: GET
-- **参数**:
-  - `param`: 用户输入的内容或提示
-- **成功响应**: 字符串形式的LLM建议
-- **失败响应**: 错误信息字符串，例如 "LLM 实例未设置" 或 "处理请求时发生错误: ..."
-
-
-### 14. 与LLM聊天（非流式）
-
-向LLM发送聊天内容并获取非流式响应。
-
-- **URL**: `/llm/chat`
-- **方法**: GET
-- **参数**:
-  - `param`: 用户输入的聊天内容
-- **成功响应**: 字符串形式的LLM聊天回复
-- **失败响应**: 错误信息字符串，例如 "LLM 实例未设置" 或 "处理请求时发生错误: ..."
-
-
-### 15. 与LLM聊天（流式）
-
-通过Server-Sent Events (SSE)与LLM进行流式聊天。
-
-- **URL**: `/llm/stream-chat`
-- **方法**: GET
-- **参数**:
-  - `param`: 用户输入的聊天内容
-- **成功响应**: SSE事件流。事件类型包括:
-  - `start`: 表示请求开始处理，数据为 "开始处理请求"
-  - `chunk`: 表示LLM返回的数据块，数据为实际内容
-  - `end`: 表示LLM响应结束，数据为最后一块内容
-  - `error`: 表示发生错误，数据为错误信息
-- **失败响应**: 如果LLM未设置，初始会返回错误。在流处理过程中也可能通过SSE发送错误事件。
-
-
-### 16. 获取LLM建议（流式）
-
-通过Server-Sent Events (SSE)获取LLM的流式建议。
-
-- **URL**: `/llm/stream-suggestion`
-- **方法**: GET
-- **参数**:
-  - `param`: 用户输入的内容或提示
-- **成功响应**: SSE事件流。事件类型包括:
-  - `start`: 表示请求开始处理，数据为 "开始处理请求"
-  - `chunk`: 表示LLM返回的数据块，数据为实际内容
-  - `end`: 表示LLM响应结束，数据为最后一块内容
-  - `error`: 表示发生错误，数据为错误信息
-- **失败响应**: 如果LLM未设置，初始会返回错误。在流处理过程中也可能通过SSE发送错误事件。
-
-## 示例
-
-### 获取博客列表
-
-```
-GET /api/blogs/lists
-```
-
-### 获取特定博客
-
-```
-GET /api/blogs/2023/12/25/我的博客_20231225_120000.md/
-```
-
-### 更新博客信息
-
-```
-GET /api/blogs/2023/12/25/我的博客_20231225_120000.md/updateinfo?title=新标题&categories=技术&tags=Java&tags=Spring&saying=这是一个摘要
-```
-
-### 添加新博客
-
-```
-GET /api/blogs/add?title=新博客&categories=技术分享&tags=Java&tags=编程&saying=这是一篇关于Java的博客
-```
-
-### 删除博客
-
-```
-GET /api/blogs/2023/12/25/我的博客_20231225_120000.md/delete/
-```
-
-### 获取图片资源
-
-```
-GET /api/计算机网络第五章--网络层_20250425_151005/1745565448467.png
-```
-
-### 上传图片
-
-```
-POST /image/upload
-Content-Type: multipart/form-data
-
-Form fields:
-- file: [图片文件]
-- relativePath: 计算机网络第五章--网络层_20250425_151005
-```
-
-### 获取系统配置
-
-```
-GET /config/get
-```
-
-### 更新系统配置
-
-```
-POST /config/set
-Content-Type: application/json
-
-{
-  "blogStoragePath": "D:/blog_storage",
-  "imageStoragePath": "D:/image_storage",
-  "XModelAPIKey": "abc123def456"
+      "saying": "格言",
+      "dateTime": "2025-06-09T10:30:00",
+      "content": "博客内容"
+    }
+  ],
+  "error": null
 }
 ```
 
-### 设置LLM类型
+#### 2.2 根据ID获取博客
 
-```
-GET /llm/set?llmType=XModel
-```
+- **URL**: `GET /api/blogs/{id}`
+- **描述**: 获取指定ID的博客详情
+- **路径参数**:
+  - `id`: 博客ID
+- **响应**:
 
-### 获取当前LLM类型
-
-```
-GET /llm/get
-```
-
-### 获取LLM建议（非流式）
-
-```
-GET /llm/getsuggestion?param=请帮我润色一下这段文字
-```
-
-### 与LLM聊天（非流式）
-
-```
-GET /llm/chat?param=你好，你叫什么名字
-```
-
-### 与LLM聊天（流式）
-
-```
-GET /llm/stream-chat?param=讲一个笑话
+```json
+{
+  "status": 0,
+  "data": {
+    "id": 1,
+    "title": "博客标题",
+    "filename": "文件名.md",
+    "categories": "分类",
+    "tags": ["标签1", "标签2"],
+    "saying": "格言",
+    "dateTime": "2025-06-09T10:30:00",
+    "content": "博客内容"
+  },
+  "error": null
+}
 ```
 
-### 获取LLM建议（流式）
+#### 2.3 创建博客
+
+- **URL**: `POST /api/blogs`
+- **描述**: 创建新的博客
+- **请求体**:
+
+```json
+{
+  "title": "博客标题",
+  "categories": "分类",
+  "tags": ["标签1", "标签2"],
+  "saying": "格言",
+  "content": "博客内容"
+}
+```
+
+- **响应**:
+
+```json
+{
+  "status": 0,
+  "data": null,
+  "error": null
+}
+```
+
+#### 2.4 更新博客
+
+- **URL**: `PUT /api/blogs/{id}`
+- **描述**: 更新指定ID的博客
+- **路径参数**:
+  - `id`: 博客ID
+- **请求体**:
+
+```json
+{
+  "title": "更新的标题",
+  "categories": "更新的分类",
+  "tags": ["更新的标签"],
+  "saying": "更新的格言",
+  "content": "更新的内容"
+}
+```
+
+- **响应**:
+
+```json
+{
+  "status": 0,
+  "data": null,
+  "error": null
+}
+```
+
+#### 2.5 删除博客
+
+- **URL**: `DELETE /api/blogs/{id}`
+- **描述**: 删除指定ID的博客
+- **路径参数**:
+  - `id`: 博客ID
+- **响应**:
+
+```json
+{
+  "status": 0,
+  "data": null,
+  "error": null
+}
+```
+
+#### 2.6 搜索博客
+
+- **URL**: `GET /api/blogs/search`
+- **描述**: 根据条件搜索博客
+- **查询参数**:
+  - `title`: 标题关键字（可选）
+  - `categories`: 分类（可选）
+  - `tags`: 标签（可选）
+- **响应**:
+
+```json
+{
+  "status": 0,
+  "data": [
+    {
+      "id": 1,
+      "title": "博客标题",
+      "categories": "分类",
+      "tags": ["标签1"],
+      "dateTime": "2025-06-09T10:30:00"
+    }
+  ],
+  "error": null
+}
+```
+
+---
+
+### 3. 图片管理模块 (`/image`)
+
+#### 3.1 获取图片
+
+- **URL**: `GET /image/{*relativePath}`
+- **描述**: 根据相对路径获取图片资源
+- **路径参数**:
+  - `relativePath`: 图片的相对路径
+- **示例**: `GET /image/folder/image.png`
+- **响应**: 返回图片文件流
+
+#### 3.2 上传图片
+
+- **URL**: `POST /image/upload`
+- **描述**: 上传图片到指定路径
+- **请求参数**:
+  - `file`: MultipartFile - 图片文件
+  - `relativePath`: String - 保存的相对路径
+- **响应**:
+
+```json
+{
+  "success": true,
+  "message": "图片上传成功",
+  "path": "相对路径/文件名.jpg"
+}
+```
+
+---
+
+### 4. 配置管理模块 (`/config`)
+
+#### 4.1 获取配置
+
+- **URL**: `GET /config/get`
+- **描述**: 获取系统配置信息
+- **响应**:
+
+```json
+{
+  "blogStoragePath": "博客存储路径",
+  "imageStoragePath": "图片存储路径",
+  "xmodelAPIKey": "XModel API密钥",
+  "bigmodelAPIKey": "BigModel API密钥"
+}
+```
+
+#### 4.2 更新配置
+
+- **URL**: `POST /config/set`
+- **描述**: 更新系统配置
+- **请求体**:
+
+```json
+{
+  "blogStoragePath": "博客存储路径",
+  "imageStoragePath": "图片存储路径",
+  "xmodelAPIKey": "XModel API密钥",
+  "bigmodelAPIKey": "BigModel API密钥"
+}
+```
+
+- **响应**: `boolean` - 是否更新成功
+
+---
+
+### 5. LLM集成模块 (`/llm`)
+
+#### 5.1 设置LLM类型
+
+- **URL**: `POST /llm/set`
+- **描述**: 设置要使用的LLM类型
+- **查询参数**:
+  - `llmType`: LLM类型 ("XModel" 或 "BigModel")
+- **响应**: 无返回值
+
+#### 5.2 获取当前LLM
+
+- **URL**: `GET /llm/get`
+- **描述**: 获取当前设置的LLM类型
+- **响应**: `string` - LLM类名或"null"
+
+#### 5.3 获取建议
+
+- **URL**: `GET /llm/getsuggestion`
+- **描述**: 基于输入获取LLM建议
+- **查询参数**:
+  - `param`: 输入参数
+- **响应**: `string` - LLM生成的建议内容
+
+#### 5.4 聊天对话
+
+- **URL**: `GET /llm/chat`
+- **描述**: 与LLM进行聊天对话
+- **查询参数**:
+  - `param`: 对话内容
+- **响应**: `string` - LLM的回复
+
+---
+
+## 数据模型
+
+### User (用户)
+
+```json
+{
+  "id": "Long - 用户ID",
+  "username": "String - 用户名 (3-50字符)",
+  "email": "String - 邮箱地址",
+  "password": "String - 密码 (最少6位)",
+  "createdAt": "LocalDateTime - 创建时间",
+  "updatedAt": "LocalDateTime - 更新时间",
+  "role": "Role - 用户角色 (USER/ADMIN)"
+}
+```
+
+### Blog (博客)
+
+```json
+{
+  "id": "Long - 博客ID",
+  "filepath": "Path - 文件路径",
+  "filename": "String - 文件名",
+  "title": "String - 标题",
+  "dateTime": "LocalDateTime - 日期时间",
+  "categories": "String - 分类",
+  "tags": "String[] - 标签数组",
+  "saying": "String - 格言",
+  "content": "String - 内容"
+}
+```
+
+### Message (响应消息)
+
+```json
+{
+  "status": "int - 状态码 (0成功, 1失败)",
+  "data": "Object - 数据内容",
+  "error": "String - 错误信息"
+}
+```
+
+---
+
+## 认证说明
+
+### JWT认证
+
+大部分API需要JWT认证，在请求头中添加：
 
 ```
-GET /llm/stream-suggestion?param=针对这个主题给我一些写作建议
+Authorization: Bearer <jwt_token>
 ```
+
+### 跨域配置
+
+- 认证相关接口支持跨域访问
+- 允许的源：`*`
+- 最大缓存时间：3600秒
+
+---
+
+## 错误处理
+
+### 状态码说明
+
+- `0`: 操作成功
+- `1`: 操作失败
+
+### 常见错误
+
+- **401 Unauthorized**: 未授权访问
+- **400 Bad Request**: 请求参数错误
+- **404 Not Found**: 资源不存在
+- **500 Internal Server Error**: 服务器内部错误
+
+---
+
+## 部署配置
+
+### 数据库配置
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/blog_manager
+spring.datasource.username=root
+spring.datasource.password=password
+```
+
+### 文件上传限制
+
+- 最大文件大小：10MB
+- 最大请求大小：10MB
+
+### JWT配置
+
+- 密钥：可在 `application.properties`中配置
+- 过期时间：24小时（86400000毫秒）
+
+---
+
+## 使用示例
+
+### 完整的API调用流程
+
+1. **用户注册**
+
+```bash
+curl -X POST http://localhost:5200/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","email":"test@example.com","password":"123456"}'
+```
+
+2. **用户登录**
+
+```bash
+curl -X POST http://localhost:5200/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"123456"}'
+```
+
+3. **创建博客（需要JWT Token）**
+
+```bash
+curl -X POST http://localhost:5200/api/blogs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <jwt_token>" \
+  -d '{"title":"我的第一篇博客","categories":"技术","tags":["Java","Spring"],"saying":"学而时习之","content":"这是我的第一篇博客内容"}'
+```
+
+4. **上传图片**
+
+```bash
+curl -X POST http://localhost:5200/image/upload \
+  -F "file=@image.jpg" \
+  -F "relativePath=blog/images"
+```
+
+---
+
+## 注意事项
+
+1. **安全性**: 生产环境中请更改默认的JWT密钥
+2. **文件路径**: 图片和博客存储路径需要在配置中正确设置
+3. **数据库**: 确保MySQL服务运行并创建了 `blog_manager`数据库
+4. **LLM API**: 使用LLM功能前需要配置相应的API密钥
+5. **跨域**: 当前配置允许所有源的跨域访问，生产环境中建议限制具体域名
+
+---
+
+_最后更新时间：2025年6月9日_

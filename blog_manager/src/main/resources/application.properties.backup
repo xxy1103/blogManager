@@ -1,23 +1,28 @@
 spring.application.name=blog_manager
 server.port=5200
+
 #绝对路径
 ## 配置文件路径
 # 使用当前工作目录作为配置文件路径
 config.storage.path=${user.dir}/config.json
+
 # 最大文件大小
 spring.servlet.multipart.max-file-size=10MB
 # 最大请求大小（包含所有文件的总和）
 spring.servlet.multipart.max-request-size=10MB
+
 # MySQL数据库配置
 spring.datasource.url=jdbc:mysql://localhost:3306/blog_manager?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 spring.datasource.username=root
-spring.datasource.password=XxY110110
+spring.datasource.password=password
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
 # JPA配置
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 spring.jpa.properties.hibernate.format_sql=true
+
 # JWT配置
 jwt.secret=mySecretKey123456789012345678901234567890
 jwt.expiration=86400000

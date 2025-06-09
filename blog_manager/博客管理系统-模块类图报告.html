@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客管理系统 - 模块类图报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #e9ecef;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .module-section {
+            margin-bottom: 40px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .module-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .module-title {
+            font-size: 2em;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--secondary-color);
+            position: relative;
+        }
+
+        .module-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--accent-color);
+        }
+
+        .mermaid-container {
+            background: #fafbfc;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow: auto;
+            position: relative;
+        }
+
+        .mermaid-container::before {
+            content: '📊';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5em;
+            opacity: 0.3;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .description {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        .toc {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow);
+        }
+
+        .toc h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 10px 0;
+            padding: 10px 15px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .toc li:hover {
+            background: var(--secondary-color);
+            color: white;
+            transform: translateX(10px);
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: inherit;
+            font-weight: 500;
+        }
+
+        .pattern-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .pattern-section h2 {
+            margin-bottom: 20px;
+        }
+
+        .pattern-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .pattern-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .pattern-item h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 15px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .module-section {
+                padding: 20px;
+            }
+            
+            .pattern-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Mermaid 图表自定义样式 */
+        .mermaid .node rect {
+            fill: #e3f2fd !important;
+            stroke: #1976d2 !important;
+            stroke-width: 2px !important;
+        }
+
+        .mermaid .node text {
+            fill: #1565c0 !important;
+            font-weight: 600 !important;
+        }
+
+        .mermaid .edgePath path {
+            stroke: #424242 !important;
+            stroke-width: 2px !important;
+        }
+
+        .mermaid .edgeLabel {
+            background-color: #fff !important;
+            border: 1px solid #ddd !important;
+            border-radius: 4px !important;
+            padding: 2px 6px !important;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--secondary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 平滑滚动 */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* 高亮效果 */
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🏗️ 博客管理系统</h1>
+            <p>模块架构与类图设计报告</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">生成日期: 2025年6月9日</p>
+        </div>
+
+        <!-- 目录 -->
+        <div class="toc">
+            <h2>📋 目录导航</h2>
+            <ul>
+                <li><a href="#model-module">1. 核心数据模型模块</a></li>
+                <li><a href="#config-module">2. 配置管理模块</a></li>
+                <li><a href="#repository-module">3. 数据访问层模块</a></li>
+                <li><a href="#controller-module">4. 控制器层模块</a></li>
+                <li><a href="#llm-service-module">5. LLM服务模块</a></li>
+                <li><a href="#llm-factory-module">6. LLM工厂模式模块</a></li>
+                <li><a href="#llm-comm-module">7. LLM通信模块</a></li>
+                <li><a href="#main-module">8. 主应用程序模块</a></li>
+                <li><a href="#dependency-graph">9. 模块间依赖关系图</a></li>
+                <li><a href="#design-patterns">10. 关键设计模式</a></li>
+            </ul>
+        </div>
+
+        <!-- 1. 核心数据模型模块 -->
+        <div class="module-section" id="model-module">
+            <h2 class="module-title">1. 核心数据模型模块 (Model Module)</h2>
+            <div class="description">
+                <p>负责定义系统的核心数据实体，包括博客对象和消息响应对象。<span class="highlight">Blog</span>类实现了<span class="highlight">Comparable</span>和<span class="highlight">Cloneable</span>接口，支持排序和克隆操作。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    classDiagram
+                        class Blog {
+                            -Path filepath
+                            -String filename
+                            -String title
+                            -LocalDateTime dateTime
+                            -String categories
+                            -String[] tags
+                            -String saying
+                            -String content
+                            -DateTimeFormatter formatter$
+                            -DateTimeFormatter formatterPrint$
+                            +clone() Blog
+                            +equals(Object) boolean
+                            +compareTo(Blog) int
+                            +getters/setters()
+                            +loadFromFile(Path) Blog
+                            +parseYamlFrontMatter(String) void
+                            +parseFrontMatterValue(String, String) void
+                            +saveToFile() void
+                            +toString() String
+                        }
+                        
+                        class Message {
+                            -int status
+                            -Object data
+                            -String error
+                            +Message(int, Object, String)
+                            +getStatus() int
+                            +getData() Object
+                            +getError() String
+                        }
+                        
+                        Blog --|> Comparable : implements
+                        Blog --|> Cloneable : implements
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 配置管理模块 -->
+        <div class="module-section" id="config-module">
+            <h2 class="module-title">2. 配置管理模块 (Configuration Module)</h2>
+            <div class="description">
+                <p>管理系统的所有配置信息，包括存储路径和API密钥。使用<span class="highlight">@Configuration</span>注解标记为Spring配置类。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    classDiagram
+                        class Config {
+                            -String blogStoragePath
+                            -String imageStoragePath
+                            -String xmodelAPIKey
+                            -String bigmodelAPIKey
+                            +getXmodelAPIKey() String
+                            +setXmodelAPIKey(String) void
+                            +getBigmodelAPIKey() String
+                            +setBigmodelAPIKey(String) void
+                            +getBlogStoragePath() String
+                            +setBlogStoragePath(String) void
+                            +getImageStoragePath() String
+                            +setImageStoragePath(String) void
+                        }
+                        
+                        class ConfigService {
+                            -Path configPath
+                            -Config config
+                            -Logger logger$
+                            +ConfigService(String)
+                            +loadConfig() void
+                            +saveConfig() void
+                            +getConfig() Config
+                            +setConfig(Config) void
+                            +createDefaultConfig() Config
+                        }
+                        
+                        ConfigService --> Config : manages
+                        ConfigService : <<@Configuration>>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 数据访问层模块 -->
+        <div class="module-section" id="repository-module">
+            <h2 class="module-title">3. 数据访问层模块 (Repository Module)</h2>
+            <div class="description">
+                <p>负责博客文件的存储、检索和管理操作。使用<span class="highlight">@Service</span>注解标记为Spring服务组件。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    classDiagram
+                        class BlogFileService {
+                            -Logger logger$
+                            -Path storageLocation
+                            -Config config
+                            +BlogFileService(Config)
+                            +init() void
+                            +loadAllBlogs() List~Blog~
+                            +saveBlog(Blog) void
+                            +deleteBlog(String) boolean
+                            +findBlogByFilename(String) Blog
+                            +searchBlogs(String) List~Blog~
+                            +updateBlog(Blog) void
+                            +getBlogContent(String) String
+                            +validateBlogPath(Path) Path
+                            +sortBlogsByDateTime(List~Blog~) List~Blog~
+                        }
+                        
+                        BlogFileService --> Config : uses
+                        BlogFileService --> Blog : manages
+                        BlogFileService : <<@Service>>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 控制器层模块 -->
+        <div class="module-section" id="controller-module">
+            <h2 class="module-title">4. 控制器层模块 (Controller Module)</h2>
+            <div class="description">
+                <p>提供REST API接口，处理HTTP请求。包括博客管理、LLM聊天、图片上传和配置管理等功能。所有控制器都使用<span class="highlight">@RestController</span>注解。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    classDiagram
+                        class BlogController {
+                            -Logger logger$
+                            -BlogFileService blogFileService
+                            -List~Blog~ blogList
+                            +BlogController(BlogFileService)
+                            +searchBydata(Blog) Blog
+                            +getAllBlogs() Message
+                            +getBlogByDatetime(String) Message
+                            +getBlogByFilename(String) Message
+                            +createBlog(Blog) Message
+                            +updateBlog(String, Blog) Message
+                            +deleteBlog(String) Message
+                            +searchBlogs(String) Message
+                        }
+                        
+                        class LLMController {
+                            -Logger logger$
+                            -LLM llm
+                            -Config config
+                            -ExecutorService executorService
+                            +chat(String, String, String) SseEmitter
+                            +chatWithBigModel(String, String) SseEmitter
+                            +chatWithXModel(String, String) SseEmitter
+                            +createStreamCallback(SseEmitter) StreamCallback
+                        }
+                        
+                        class ImageController {
+                            -Logger logger$
+                            -Config config
+                            +uploadImage(MultipartFile) Message
+                            +getImage(String) ResponseEntity
+                            +deleteImage(String) Message
+                            +listImages() Message
+                        }
+                        
+                        class ConfigController {
+                            -Logger logger$
+                            -ConfigService configService
+                            +getConfig() Message
+                            +updateConfig(Config) Message
+                            +resetConfig() Message
+                        }
+                        
+                        BlogController --> BlogFileService : uses
+                        BlogController --> Blog : manages
+                        BlogController --> Message : returns
+                        LLMController --> Config : uses
+                        ImageController --> Config : uses
+                        ConfigController --> ConfigService : uses
+                        ConfigController --> Config : manages
+                        
+                        BlogController : <<@RestController>>
+                        LLMController : <<@RestController>>
+                        ImageController : <<@RestController>>
+                        ConfigController : <<@RestController>>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. LLM服务模块 -->
+        <div class="module-section" id="llm-service-module">
+            <h2 class="module-title">5. LLM服务模块 (LLM Service Module)</h2>
+            <div class="description">
+                <p>实现大语言模型的抽象和具体实现。使用<span class="highlight">模板方法模式</span>，抽象类<span class="highlight">LLM</span>定义通用行为，具体实现类处理不同模型的API调用。</p>
+            </div>            <div class="mermaid-container">
+                <div class="mermaid">
+classDiagram
+    class LLM {
+        <<abstract>>
+        -String APIKey
+        -String APIUrl
+        -String model
+        -ArrayList messagesArray
+        -Boolean IsStream
+        -String temperature
+        +LLM(String, String, String)
+        +getAPIKey() String
+        +setAPIKey(String) void
+        +callLLM(String, String, StreamCallback) void
+    }
+    
+    class BigModel {
+        -Logger logger
+        +BigModel(String, String, String)
+        +callLLM(String, String, StreamCallback) void
+        -sendRequest(BigModelPOST, StreamCallback) void
+        -handleStreamResponse(BufferedReader, StreamCallback) void
+    }
+    
+    class XModel {
+        -Logger logger
+        +XModel(String, String, String)
+        +callLLM(String, String, StreamCallback) void
+        -sendRequest(POST, StreamCallback) void
+        -handleStreamResponse(BufferedReader, StreamCallback) void
+    }
+    
+    class BigModelPOST {
+        -String temperature
+        +BigModelPOST(String, Boolean, String, POSTMessage[])
+        +getTemperature() String
+        +setTemperature(String) void
+    }
+    
+    class POST {
+        -String model
+        -Boolean stream
+        -POSTMessage[] messages
+        +POST(String, Boolean, POSTMessage[])
+        +getModel() String
+        +setModel(String) void
+    }
+    
+    LLM <|-- BigModel
+    LLM <|-- XModel
+    BigModel ..> BigModelPOST
+    XModel ..> POST
+    POST <|-- BigModelPOST
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. LLM工厂模式模块 -->
+        <div class="module-section" id="llm-factory-module">
+            <h2 class="module-title">6. LLM工厂模式模块 (LLM Factory Module)</h2>
+            <div class="description">
+                <p>使用<span class="highlight">工厂模式</span>创建不同类型的LLM实例。通过<span class="highlight">FactoryInterface</span>接口统一创建逻辑，便于扩展新的模型类型。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    classDiagram
+                        class FactoryInterface {
+                            <<interface>>
+                            +createLLM() LLM
+                        }
+                        
+                        class BigModelFactory {
+                            -Config config
+                            +BigModelFactory(Config)
+                            +createLLM() LLM
+                        }
+                        
+                        class XModelFactory {
+                            -Config config
+                            +XModelFactory(Config)
+                            +createLLM() LLM
+                        }
+                        
+                        BigModelFactory --|> FactoryInterface : implements
+                        XModelFactory --|> FactoryInterface : implements
+                        BigModelFactory --> Config : uses
+                        XModelFactory --> Config : uses
+                        BigModelFactory --> BigModel : creates
+                        XModelFactory --> XModel : creates
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. LLM通信模块 -->
+        <div class="module-section" id="llm-comm-module">
+            <h2 class="module-title">7. LLM通信模块 (LLM Communication Module)</h2>
+            <div class="description">
+                <p>处理与LLM API的通信协议，包括请求消息封装、流式回调处理和提示词管理。使用<span class="highlight">回调模式</span>处理异步响应。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    classDiagram
+                        class POST {
+                            -String model
+                            -Boolean stream
+                            -POSTMessage[] messages
+                            +POST(String, Boolean, POSTMessage[])
+                            +getters/setters()
+                        }
+                        
+                        class POSTMessage {
+                            -String role
+                            -String content
+                            +POSTMessage(String, String)
+                            +getRole() String
+                            +setRole(String) void
+                            +getContent() String
+                            +setContent(String) void
+                        }
+                        
+                        class StreamCallback {
+                            <<interface>>
+                            +onData(String) void
+                            +onError(String) void
+                            +onComplete() void
+                        }
+                        
+                        class Prompt {
+                            +SYSTEM_PROMPT$ String
+                            +USER_PROMPT$ String
+                            +generatePrompt(String, String) String
+                            +formatContent(String) String
+                        }
+                        
+                        POST --> POSTMessage : contains
+                        LLM --> StreamCallback : uses
+                        LLM --> Prompt : uses
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. 主应用程序模块 -->
+        <div class="module-section" id="main-module">
+            <h2 class="module-title">8. 主应用程序模块 (Main Application Module)</h2>
+            <div class="description">
+                <p>Spring Boot应用的入口点，使用<span class="highlight">@SpringBootApplication</span>注解启动整个应用程序。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    classDiagram
+                        class BlogManagerApplication {
+                            +main(String[]) void
+                        }
+                        
+                        BlogManagerApplication : <<@SpringBootApplication>>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. 模块间依赖关系图 -->
+        <div class="module-section" id="dependency-graph">
+            <h2 class="module-title">9. 模块间依赖关系图</h2>
+            <div class="description">
+                <p>展示系统各模块间的依赖关系和分层架构。采用经典的<span class="highlight">MVC三层架构</span>：表现层、业务逻辑层、数据层。</p>
+            </div>
+            <div class="mermaid-container">
+                <div class="mermaid">
+                    graph TD
+                        A[BlogManagerApplication] --> B[Controller Module]
+                        B --> C[Repository Module]
+                        B --> D[LLM Service Module]
+                        B --> E[Configuration Module]
+                        C --> F[Model Module]
+                        D --> G[LLM Factory Module]
+                        D --> H[LLM Communication Module]
+                        E --> F
+                        G --> D
+                        G --> E
+                        
+                        subgraph "表现层"
+                            B
+                        end
+                        
+                        subgraph "业务逻辑层"
+                            C
+                            D
+                            G
+                            H
+                        end
+                        
+                        subgraph "数据层"
+                            F
+                            E
+                        end
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. 关键设计模式 -->
+        <div class="pattern-section" id="design-patterns">
+            <h2>🎨 关键设计模式</h2>
+            <div class="pattern-list">
+                <div class="pattern-item">
+                    <h3>🏭 工厂模式</h3>
+                    <p><code>FactoryInterface</code>, <code>BigModelFactory</code>, <code>XModelFactory</code></p>
+                    <p>用于创建不同类型的LLM实例，便于扩展新的模型支持。</p>
+                </div>
+                <div class="pattern-item">
+                    <h3>📋 模板方法模式</h3>
+                    <p><code>LLM</code>抽象类</p>
+                    <p>定义算法骨架，子类实现具体细节，保证代码复用性。</p>
+                </div>
+                <div class="pattern-item">
+                    <h3>📞 回调模式</h3>
+                    <p><code>StreamCallback</code>接口</p>
+                    <p>处理异步流式响应，实现非阻塞通信。</p>
+                </div>
+                <div class="pattern-item">
+                    <h3>💉 依赖注入</h3>
+                    <p>Spring框架的<code>@Autowired</code>注解</p>
+                    <p>实现控制反转，降低组件间耦合度。</p>
+                </div>
+                <div class="pattern-item">
+                    <h3>🏗️ MVC模式</h3>
+                    <p>Controller-Service-Repository架构</p>
+                    <p>分离关注点，提高代码可维护性和可测试性。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>📈 博客管理系统架构设计 | 生成于 2025年6月9日</p>
+            <p>🚀 采用Spring Boot + Mermaid图表技术栈</p>
+        </div>
+    </div>
+
+    <script>        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#e3f2fd',
+                primaryTextColor: '#1565c0',
+                primaryBorderColor: '#1976d2',
+                lineColor: '#424242',
+                secondaryColor: '#fff3e0',
+                tertiaryColor: '#f3e5f5',
+                background: '#ffffff',
+                mainBkg: '#e3f2fd',
+                secondBkg: '#fff3e0',
+                tertiaryBkg: '#f3e5f5'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            classDiagram: {
+                useMaxWidth: true,
+                htmlLabels: true
+            },
+            logLevel: 'debug'
+        });
+
+        // 检查Mermaid渲染状态
+        setTimeout(() => {
+            const mermaidElements = document.querySelectorAll('.mermaid');
+            mermaidElements.forEach((element, index) => {
+                if (element.innerHTML.includes('classDiagram') && !element.querySelector('svg')) {
+                    console.warn(`Mermaid diagram ${index + 1} failed to render`);
+                    // 尝试重新渲染
+                    mermaid.init(undefined, element);
+                }
+            });
+        }, 2000);
+
+        // 平滑滚动到锚点
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 添加加载动画
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s ease-in-out';
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

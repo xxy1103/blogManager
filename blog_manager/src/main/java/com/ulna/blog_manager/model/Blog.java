@@ -18,6 +18,7 @@ public class Blog implements Comparable<Blog>,Cloneable {
     private static final String FRONT_MATTER_DELIMITER = "---";
     private static final String MORE_TAG = "<!-- more -->";
     
+    private Long id;            // 数据库ID（新增）
     private Path filepath;    // 博客路径
     private String filename;  // 博客文件名
     private String title;       // 博客标题
@@ -179,6 +180,8 @@ public class Blog implements Comparable<Blog>,Cloneable {
             this.saying = null;
         }
     }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public Path getFilepath() { return filepath; }
     public void setFilepath(Path filepath) { this.filepath = filepath; }
     public String getFilename() { return filename; }
