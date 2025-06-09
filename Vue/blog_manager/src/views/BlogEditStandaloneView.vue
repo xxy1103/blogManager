@@ -46,7 +46,6 @@ import type { BlogDetail } from '../types/blog.js'
 // 修复导入方式，确保 Editor 是一个值而不仅仅是一个类型
 import Editor from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
-import AIChatWindow from '../components/AIChatWindow.vue' // Added import for AI Chat Window
 
 const route = useRoute()
 const router = useRouter()
@@ -70,25 +69,28 @@ const hasUnsavedChanges = computed(() => {
 const fetchBlogToEdit = async () => {
   loading.value = true
   error.value = null
-  const { year, month, day, filename } = route.params
-  if (
-    Array.isArray(year) ||
-    Array.isArray(month) ||
-    Array.isArray(day) ||
-    Array.isArray(filename)
-  ) {
-    error.value = '无效的博客链接参数'
+  // const { year, month, day, filename } = route.params; // Old way
+  const idParam = route.params.id // New: Get id from route params
+
+  if (typeof idParam !== 'string' || idParam === 'undefined' || !idParam) {
+    error.value = '无效或未提供博客 ID'
     loading.value = false
+    console.error('Invalid or missing blog ID from route params:', idParam)
+    return
+  }
+
+  const numericId = parseInt(idParam, 10)
+  console.log('Parsed numericId for editing:', numericId)
+
+  if (isNaN(numericId)) {
+    error.value = '博客 ID 格式无效'
+    loading.value = false
+    console.error('Invalid blog ID format after parsing for editing:', idParam)
     return
   }
 
   try {
-    const fetchedBlog = await getBlogDetail(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-    )
+    const fetchedBlog = await getBlogDetail(numericId) // Call with numericId
     if (fetchedBlog) {
       blog.value = fetchedBlog
       initialContent.value = fetchedBlog.content // Store initial content
@@ -132,13 +134,9 @@ const initEditor = (content: string) => {
             return
           }
 
-          // Use blog filename (without .md) as the relative path for the image directory
-          let blogFilename = route.params.filename as string
-          if (Array.isArray(blogFilename)) {
-            // Should not happen based on route setup, but good practice
-            blogFilename = blogFilename[0]
-          }
-          const relativePathForImage = blogFilename.replace(/\.md$/, '')
+          // Use blog ID as part of the relative path for the image directory
+          // This ensures images are somewhat grouped by blog post if desired,
+          // or use a more general path if preferred.
 
           const timestamp = Date.now()
           const extension = blob.name.split('.').pop() || blob.type.split('/')[1] || 'png'
@@ -149,25 +147,26 @@ const initEditor = (content: string) => {
             type: blob.type,
           })
 
-          try {
-            const imageUrl = await uploadImage(imageFile, relativePathForImage)
-            // imageUrl from uploadImage is "image/relativePathForImage/timestampedFilename.ext"
-            // This is the format required for saving in markdown.
-            // The alt text can be the filename.
-            callback(imageUrl, timestampedFilename)
-          } catch (uploadError) {
-            console.error('Failed to upload image:', uploadError)
-            // Notify the user, e.g., by inserting an error message or using a toast notification
-            // For now, we'll call the callback with an error placeholder.
-            // The editor might show this as a broken image link.
-            callback('error_uploading_image', 'Error uploading image')
-            // Optionally, display a more user-friendly error message on the UI
-            saveMessage.value = `图片上传失败: ${uploadError instanceof Error ? uploadError.message : '未知错误'}`
+          // uploadImage is designed to catch its own errors and return a structured response.
+          const uploadResult = await uploadImage(imageFile)
+
+          if (uploadResult.success && uploadResult.imageUrl) {
+            // The imageUrl from blogService is already correctly formatted (e.g., /image/filename.png)
+            // It's a root-relative path, suitable for markdown.
+            callback(uploadResult.imageUrl, timestampedFilename) // Use the actual filename or a descriptive alt text
+          } else {
+            // Upload failed or imageUrl was not provided in the response
+            console.error('Failed to upload image:', uploadResult.message)
+            // Notify the user via UI
+            saveMessage.value = `图片上传失败: ${uploadResult.message || '未知错误。无法获取图片URL。'}`
             saveSuccess.value = false
             // Auto-hide message after a few seconds
             setTimeout(() => {
               saveMessage.value = ''
             }, 5000)
+            // Inform the editor callback about the failure.
+            // This will insert a broken image link with the alt text indicating the failure.
+            callback('error_upload_failed.png', `Upload failed: ${timestampedFilename}`)
           }
         },
       },
@@ -198,28 +197,22 @@ const saveBlog = async () => {
   if (!blog.value || !editorInstance) return
 
   const currentMarkdown = editorInstance.getMarkdown()
-  const { year, month, day, filename } = route.params
-  if (
-    Array.isArray(year) ||
-    Array.isArray(month) ||
-    Array.isArray(day) ||
-    Array.isArray(filename)
-  ) {
-    saveMessage.value = '无效的博客链接参数，无法保存。'
-    saveSuccess.value = false
-    return
+
+  // Prepare the data to be sent to the backend, matching the API requirements
+  const blogDataToUpdate = {
+    title: blog.value.title, // Assuming title is part of blog.value and doesn't change here
+    categories: blog.value.categories, // Assuming categories are part of blog.value
+    tags: blog.value.tags, // Assuming tags are part of blog.value
+    saying: blog.value.saying, // Assuming saying is part of blog.value
+    content: currentMarkdown, // The updated content from the editor
   }
 
   isSaving.value = true
   saveMessage.value = ''
   try {
-    const result = await updateBlogContent(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-      currentMarkdown,
-    )
+    // Call updateBlogContent with the blog's ID and the prepared data
+    const result = await updateBlogContent(blog.value.id, blogDataToUpdate)
+
     saveSuccess.value = result.success
     saveMessage.value = result.message
     if (result.success) {

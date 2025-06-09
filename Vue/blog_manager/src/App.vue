@@ -19,7 +19,8 @@ function handleLogout() {
         <h1>Ulna's Blog</h1>
       </RouterLink>
       <nav>
-        <RouterLink to="/" class="nav-link">首页</RouterLink>
+        <RouterLink to="/" class="nav-link">仪表盘</RouterLink>
+        <RouterLink to="/blogs" class="nav-link">博客</RouterLink>
         <RouterLink v-if="authStore.isAuthenticated" to="/blog/add" class="nav-link"
           >写作</RouterLink
         >

@@ -1,4 +1,4 @@
-import type { BlogListItem, BlogDetail } from '../types/blog'
+import type { BlogListItem, BlogDetail } from '../types/blog.js'
 import { AuthService } from './authService.js' // 导入 AuthService
 
 const API_BASE_URL = '/api' // 使用相对路径，将通过 Vite 代理转发
@@ -410,5 +410,51 @@ export async function getImageByFilename(filename: string): Promise<Blob | null>
   } catch (error) {
     console.error(`Failed to fetch image ${filename}:`, error)
     return null // Or re-throw if the caller should handle it more specifically
+  }
+}
+
+// 搜索博客功能
+export async function searchBlogs(params: {
+  title?: string
+  categories?: string
+  tags?: string
+}): Promise<BlogListItem[]> {
+  try {
+    const token = AuthService.getToken()
+    const headers: HeadersInit = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    // 构建查询参数
+    const queryParams = new URLSearchParams()
+    if (params.title) {
+      queryParams.append('title', params.title)
+    }
+    if (params.categories) {
+      queryParams.append('categories', params.categories)
+    }
+    if (params.tags) {
+      queryParams.append('tags', params.tags)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/blogs/search?${queryParams.toString()}`, {
+      headers: headers,
+    })
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+
+    const result: ApiResponse<BlogListItem[]> = await response.json()
+    if (result.status === 0 && result.data) {
+      return result.data
+    } else {
+      console.error('Error searching blogs:', result.error)
+      return []
+    }
+  } catch (error) {
+    console.error('Failed to search blogs:', error)
+    return []
   }
 }

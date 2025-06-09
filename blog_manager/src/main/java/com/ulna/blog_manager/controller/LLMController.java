@@ -33,6 +33,10 @@ public class LLMController {
 
     public LLMController(Config config) {
         this.config = config;
+        // 初始化时默认选择 XModel
+        logger.info("LLMController 初始化，默认设置 LLM 类型为 XModel");
+        XModelFactory factory = new XModelFactory(config);
+        this.llm = factory.createLLM();
     }
 
     /**

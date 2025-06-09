@@ -205,7 +205,7 @@ interface Message {
   reasoning?: string // 添加推理过程字段
   showReasoning?: boolean // 控制是否显示推理过程
 }
-const isCollapsed = ref(false) // 默认展开AI助手
+const isCollapsed = ref(true) // 默认折叠AI助手
 const messages = ref<Message[]>([
   { text: '你好！我是 AI 助手，有什么可以帮助你的吗？', sender: 'ai' },
 ])
@@ -635,8 +635,8 @@ const parseMarkdown = (text: string): string => {
   height: auto;
   padding: 10px 0;
   border: none;
-  background-color: var(--color-background-soft);
-  color: var(--color-text);
+  background-color: #ffc107; /* 高亮黄色背景 */
+  color: #333; /* 深色文字以确保对比度 */
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -654,6 +654,7 @@ const parseMarkdown = (text: string): string => {
 
 .expand-button svg {
   margin-bottom: 8px;
+  color: #333; /* 确保SVG图标颜色与文字一致 */
 }
 
 .expand-button span {
@@ -667,8 +668,8 @@ const parseMarkdown = (text: string): string => {
 }
 
 .expand-button:hover {
-  background-color: var(--color-background-mute);
-  color: var(--color-primary);
+  background-color: #e0a800; /* 鼠标悬停时颜色变深一些 */
+  color: #000;
 }
 
 .sidebar-header {
@@ -746,48 +747,6 @@ const parseMarkdown = (text: string): string => {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-}
-
-/* 开关样式 */
-.toggle-switch {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  margin-left: auto;
-}
-
-.toggle-switch input {
-  display: none;
-}
-
-.slider {
-  position: relative;
-  width: 32px;
-  height: 16px;
-  background-color: var(--color-card-bg);
-  border-radius: 16px;
-  transition: 0.3s;
-}
-
-.slider:before {
-  position: absolute;
-  content: '';
-  height: 12px;
-  width: 12px;
-  left: 2px;
-  bottom: 2px;
-  background-color: var(--color-text);
-  border-radius: 50%;
-  transition: 0.3s;
-}
-
-.toggle-switch input:checked + .slider {
-  background-color: var(--color-primary);
-}
-
-.toggle-switch input:checked + .slider:before {
-  transform: translateX(16px);
 }
 
 .messages-area {

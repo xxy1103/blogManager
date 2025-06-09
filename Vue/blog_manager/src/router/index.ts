@@ -4,7 +4,8 @@ import BlogListView from '../views/BlogListView.vue'
 import BlogDetailView from '../views/BlogDetailView.vue'
 import BlogEditStandaloneView from '../views/BlogEditStandaloneView.vue'
 import BlogAddView from '../views/BlogAddView.vue' // 新增创建博客页面导入
-import SettingsView from '../views/SettingsView.vue' // 导入设置页面组件
+// import SettingsView from '../views/SettingsView.vue' // 导入设置页面组件 - 已移除
+import DashboardView from '../views/DashboardView.vue' // 导入仪表盘页面
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import { useAuthStore } from '../stores/auth.js'
@@ -15,7 +16,14 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: BlogListView, // 修改为直接使用博客列表页面作为首页
+      component: DashboardView, // 修改为使用仪表盘作为首页
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashboardView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/about',
@@ -50,12 +58,6 @@ const router = createRouter({
       path: '/blog/add',
       name: 'blog-add',
       component: BlogAddView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: SettingsView,
       meta: { requiresAuth: true },
     },
     {
