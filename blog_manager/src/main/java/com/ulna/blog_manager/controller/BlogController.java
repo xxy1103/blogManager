@@ -9,6 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,20 +32,24 @@ public class BlogController {
     private UserService userService;
 
     /**
-     * 获取当前登录用户 - 临时实现，返回第一个用户
+     * 获取当前登录用户
      */
     private User getCurrentUser() {
-        // 临时实现：获取第一个用户用于测试
-        Optional<User> user = userService.findByUsername("admin");
-        if (user.isPresent()) {
-            return user.get();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String username = userDetails.getUsername();
+            Optional<User> user = userService.findByUsername(username);
+            if (user.isPresent()) {
+                return user.get();
+            } else {
+                // 可以根据业务逻辑处理用户不存在的情况，例如抛出异常
+                throw new RuntimeException("当前登录用户在数据库中不存在: " + username);
+            }
         } else {
-            // 如果没有用户，创建一个默认用户
-            User defaultUser = new User();
-            defaultUser.setUsername("admin");
-            defaultUser.setEmail("admin@test.com");
-            defaultUser.setPassword("password");
-            return userService.saveUser(defaultUser);
+            // 处理无法获取认证信息或 Principal 不是 UserDetails 的情况
+            // 例如，对于匿名访问或测试环境，可以返回一个匿名用户或抛出异常
+            throw new RuntimeException("无法获取当前登录用户信息");
         }
     }
 

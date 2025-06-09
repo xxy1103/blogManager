@@ -90,34 +90,49 @@ export async function getBlogDetail(id: number): Promise<BlogDetail | null> {
   }
 }
 
+// Updated to align with API PUT /api/blogs/{id}
 export async function updateBlogContent(
-  year: string,
-  month: string,
-  day: string,
-  filename: string,
-  content: string,
+  id: number,
+  blogData: {
+    title: string
+    categories: string
+    tags: string[]
+    saying: string
+    content: string
+  },
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const contentToSave = content
-    // URL 编码文件名以处理特殊字符
-    const encodedFilename = encodeURIComponent(filename)
-    const response = await fetch(
-      `${API_BASE_URL}/blogs/${year}/${month}/${day}/${encodedFilename}/updatecontent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-        body: contentToSave, // Send reverted content
-      },
-    )
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
+    const token = AuthService.getToken() // Get authentication token
+    if (!token) {
+      return { success: false, message: '用户未认证' }
     }
 
-    const result: ApiResponse<null> = await response.json()
+    const response = await fetch(`${API_BASE_URL}/blogs/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // Add Authorization header
+      },
+      body: JSON.stringify(blogData),
+    })
+
+    if (!response.ok) {
+      let errorMsg = `Network response was not ok (${response.status})`
+      try {
+        const errorData = await response.json()
+        if (errorData && (errorData.error || errorData.message)) {
+          errorMsg = errorData.error || errorData.message
+        }
+      } catch {
+        /* ignore parsing error if response is not json */
+      }
+      console.error('Error updating blog content:', errorMsg)
+      return { success: false, message: errorMsg }
+    }
+
+    const result: ApiResponse<null> = await response.json() // API response data is null for successful update
     if (result.status === 0) {
-      return { success: true, message: '更新博客内容成功' }
+      return { success: true, message: '博客更新成功' } // Adjusted success message
     } else {
       console.error('Error updating blog content:', result.error)
       return { success: false, message: result.error || '更新博客内容失败' }
@@ -131,7 +146,77 @@ export async function updateBlogContent(
   }
 }
 
-// 根据API文档 2.3 创建博客
+// Renamed from updateBlogInfo to reflect its actual operation of updating blog metadata
+// Aligns with API PUT /api/blogs/{id} but only for metadata fields (excluding content)
+export async function updateBlogMetadata(
+  id: number,
+  blogMetadata: {
+    title: string
+    categories: string
+    tags: string[]
+    saying: string
+    // content is handled by updateBlogContent
+  },
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const token = AuthService.getToken()
+    if (!token) {
+      return { success: false, message: '用户未认证' }
+    }
+
+    // Fetch the current blog content first, as the API expects the full blog object for an update.
+    // Alternatively, the backend API could be modified to accept partial updates (PATCH request).
+    // For now, we assume PUT requires all fields. If content is not meant to be changed here,
+    // we need to send the existing content.
+    const currentBlog = await getBlogDetail(id) // This service function already handles token
+    if (!currentBlog) {
+      return { success: false, message: '无法获取当前博客内容以进行更新' }
+    }
+
+    const blogDataForUpdate = {
+      ...blogMetadata, // title, categories, tags, saying from input
+      content: currentBlog.content, // Preserve existing content
+    }
+
+    const response = await fetch(`${API_BASE_URL}/blogs/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(blogDataForUpdate),
+    })
+
+    if (!response.ok) {
+      let errorMsg = `Network response was not ok (${response.status})`
+      try {
+        const errorData = await response.json()
+        if (errorData && (errorData.error || errorData.message)) {
+          errorMsg = errorData.error || errorData.message
+        }
+      } catch {
+        /* ignore parsing error if response is not json */
+      }
+      console.error('Error updating blog metadata:', errorMsg)
+      return { success: false, message: errorMsg }
+    }
+
+    const result: ApiResponse<null> = await response.json()
+    if (result.status === 0) {
+      return { success: true, message: '博客信息更新成功' }
+    } else {
+      console.error('Error updating blog metadata:', result.error)
+      return { success: false, message: result.error || '更新博客信息失败' }
+    }
+  } catch (error) {
+    console.error('Failed to update blog metadata:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : '更新博客信息失败',
+    }
+  }
+}
+
 export async function addBlog(
   title: string,
   categories: string,
@@ -195,19 +280,33 @@ export async function addBlog(
 }
 
 export async function deleteBlog(
-  year: string,
-  month: string,
-  day: string,
-  filename: string,
+  id: number, // Updated to use blog ID as per API docs
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // URL 编码文件名以处理特殊字符
-    const encodedFilename = encodeURIComponent(filename)
-    const response = await fetch(
-      `${API_BASE_URL}/blogs/${year}/${month}/${day}/${encodedFilename}/delete/`,
-    )
+    const token = AuthService.getToken() // 获取认证令牌
+    if (!token) {
+      return { success: false, message: '用户未认证' }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/blogs/${id}`, {
+      // Updated endpoint
+      method: 'DELETE', // Added DELETE method
+      headers: {
+        Authorization: `Bearer ${token}`, // Added Authorization header
+      },
+    })
     if (!response.ok) {
-      throw new Error('Network response was not ok')
+      let errorMsg = `Network response was not ok (${response.status})`
+      try {
+        const errorData = await response.json()
+        if (errorData && (errorData.error || errorData.message)) {
+          errorMsg = errorData.error || errorData.message
+        }
+      } catch {
+        /* ignore parsing error if response is not json */
+      }
+      console.error('Error deleting blog:', errorMsg)
+      return { success: false, message: errorMsg }
     }
 
     const result: ApiResponse<null> = await response.json()
@@ -222,44 +321,6 @@ export async function deleteBlog(
     return {
       success: false,
       message: error instanceof Error ? error.message : '删除博客失败',
-    }
-  }
-}
-
-export async function updateBlogInfo(
-  year: string,
-  month: string,
-  day: string,
-  filename: string,
-  title: string,
-  categories: string,
-  tags: string[],
-  saying: string,
-): Promise<{ success: boolean; message: string }> {
-  try {
-    // URL 编码文件名以处理特殊字符
-    const encodedFilename = encodeURIComponent(filename)
-    const tagsParams = tags.map((tag) => `tags=${encodeURIComponent(tag)}`).join('&')
-
-    const url = `${API_BASE_URL}/blogs/${year}/${month}/${day}/${encodedFilename}/updateinfo?title=${encodeURIComponent(title)}&categories=${encodeURIComponent(categories)}&${tagsParams}&saying=${encodeURIComponent(saying)}`
-
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
-    }
-
-    const result: ApiResponse<null> = await response.json()
-    if (result.status === 0) {
-      return { success: true, message: '更新博客信息成功' }
-    } else {
-      console.error('Error updating blog info:', result.error)
-      return { success: false, message: result.error || '更新博客信息失败' }
-    }
-  } catch (error) {
-    console.error('Failed to update blog info:', error)
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : '更新博客信息失败',
     }
   }
 }

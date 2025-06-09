@@ -11,7 +11,19 @@
       <div class="loading-spinner"></div>
       <p>正在加载博客内容...</p>
     </div>
-    <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="error" class="error-message global-message">{{ error }}</div>
+
+    <!-- 新增：用于显示删除操作的反馈信息 -->
+    <div
+      v-if="deleteMessage"
+      :class="[
+        'message-feedback',
+        deleteMessage.type === 'success' ? 'success-message' : 'error-message',
+      ]"
+      role="alert"
+    >
+      {{ deleteMessage.text }}
+    </div>
 
     <!-- 删除确认对话框 -->
     <div v-if="showDeleteConfirm" class="delete-confirm-overlay">
@@ -68,7 +80,7 @@
 
         <h1>{{ blog.title }}</h1>
         <p class="meta">
-          <span>📅 发布于：{{ formatDate(blog.date) }}</span> |
+          <span>📅 发布于：{{ formatDate(blog.dateTime) }}</span> |
           <span>📁 分类：{{ blog.categories }}</span> |
           <span>🏷️ 标签：{{ blog.tags.join(', ') }}</span>
         </p>
@@ -99,12 +111,12 @@
 <script setup lang="ts">
 // 导入 watch 和 RouteParams 类型
 import { ref, onMounted, computed, watch, reactive } from 'vue'
-import { useRoute, useRouter, type RouteParams } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router' // Removed RouteParams
 // 导入 processBlogContentForDisplay
 import {
   getBlogDetail,
   deleteBlog,
-  updateBlogInfo,
+  updateBlogMetadata, // Changed from updateBlogInfo
   processBlogContentForDisplay,
 } from '../services/blogService.js'
 import type { BlogDetail } from '../types/blog.js'
@@ -219,43 +231,31 @@ const executeDelete = async () => {
   if (!blog.value || deleteInProgress.value) return
 
   deleteInProgress.value = true
-  const { year, month, day, filename } = route.params
+  deleteMessage.value = null // 清除之前的消息
 
   try {
-    if (
-      Array.isArray(year) ||
-      Array.isArray(month) ||
-      Array.isArray(day) ||
-      Array.isArray(filename)
-    ) {
-      throw new Error('无效的博客参数')
-    }
-
-    const result = await deleteBlog(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-    )
+    const result = await deleteBlog(blog.value.id)
 
     if (result.success) {
       deleteMessage.value = { type: 'success', text: result.message }
-      // 删除成功后导航回博客列表页面
       setTimeout(() => {
-        router.push({ path: '/blogs' })
-      }, 1500)
+        // 确保在组件仍然挂载且路由存在时执行跳转
+        if (router && router.currentRoute.value.name !== 'blogs') {
+          router.push({ path: '/blogs' })
+        }
+      }, 1500) // 延迟1.5秒以便用户看到消息
     } else {
-      deleteMessage.value = { type: 'error', text: result.message }
-      showDeleteConfirm.value = false
+      deleteMessage.value = { type: 'error', text: result.message || '删除失败，请稍后再试。' }
     }
   } catch (err) {
+    console.error('Error during blog deletion process:', err)
     deleteMessage.value = {
       type: 'error',
-      text: err instanceof Error ? err.message : '删除博客时发生错误',
+      text: err instanceof Error ? `删除出错: ${err.message}` : '删除博客时发生未知错误。',
     }
-    showDeleteConfirm.value = false
   } finally {
     deleteInProgress.value = false
+    showDeleteConfirm.value = false // 无论成功或失败，都关闭确认对话框
   }
 }
 
@@ -276,57 +276,46 @@ const cancelInfoUpdate = () => {
 }
 
 const executeInfoUpdate = async () => {
-  if (infoUpdateInProgress.value) return
+  if (infoUpdateInProgress.value || !blog.value) return; // Ensure blog.value exists
 
-  infoUpdateInProgress.value = true
-  updateMessage.value = null
-  const { year, month, day, filename } = route.params
+  infoUpdateInProgress.value = true;
+  updateMessage.value = null;
+
+  const blogMetadataToUpdate = {
+    title: editForm.title,
+    categories: editForm.categories,
+    tags: editForm.tagsString.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
+    saying: editForm.saying,
+  };
 
   try {
-    if (
-      Array.isArray(year) ||
-      Array.isArray(month) ||
-      Array.isArray(day) ||
-      Array.isArray(filename)
-    ) {
-      throw new Error('无效的博客参数')
-    }
-
-    const result = await updateBlogInfo(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-      editForm.title,
-      editForm.categories,
-      editForm.tagsString.split(',').map((tag: string) => tag.trim()),
-      editForm.saying,
-    )
+    // Pass blog.value.id and the metadata object
+    const result = await updateBlogMetadata(blog.value.id, blogMetadataToUpdate);
 
     if (result.success) {
-      updateMessage.value = { type: 'success', text: '博客信息更新成功！' }
-      // 更新本地博客数据
+      updateMessage.value = { type: 'success', text: result.message };
+      // Optionally, refresh blog data locally or re-fetch
       if (blog.value) {
-        blog.value.title = editForm.title
-        blog.value.categories = editForm.categories
-        blog.value.tags = editForm.tagsString.split(',').map((tag: string) => tag.trim())
-        blog.value.saying = editForm.saying
+        blog.value.title = blogMetadataToUpdate.title;
+        blog.value.categories = blogMetadataToUpdate.categories;
+        blog.value.tags = blogMetadataToUpdate.tags;
+        blog.value.saying = blogMetadataToUpdate.saying;
       }
-      // 关闭对话框
       setTimeout(() => {
-        showInfoUpdateModal.value = false
-        updateMessage.value = null
-      }, 1500)
+        showInfoUpdateModal.value = false;
+        updateMessage.value = null;
+      }, 1500);
     } else {
-      updateMessage.value = { type: 'error', text: result.message }
+      updateMessage.value = { type: 'error', text: result.message || '更新失败，请稍后再试。' };
     }
   } catch (err) {
+    console.error('Error during blog info update:', err);
     updateMessage.value = {
       type: 'error',
-      text: err instanceof Error ? err.message : '更新博客信息时发生错误',
-    }
+      text: err instanceof Error ? `更新出错: ${err.message}` : '更新博客信息时发生未知错误。',
+    };
   } finally {
-    infoUpdateInProgress.value = false
+    infoUpdateInProgress.value = false;
   }
 }
 
@@ -837,8 +826,7 @@ hr {
   transform: translateY(-3px) rotate(30deg);
   box-shadow: var(--box-shadow-hover);
 }
-</style>
-<style>
+
 /* Global styles for Toast UI Editor if needed, e.g., z-index */
 .toastui-editor-defaultUI {
   width: 100%;
@@ -846,5 +834,40 @@ hr {
 }
 .toastui-editor-popup {
   z-index: 101; /* Ensure popups are above the editor */
+}
+</style>
+<style>
+.message-feedback {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* 如果 global-message 已经有类似样式，可以调整或复用 */
+.global-message {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  text-align: center;
+}
+/* 确保 error-message (如果用于一般错误) 和 deleteMessage 的 error 样式一致或协调 */
+.error-message.global-message {
+  /* 特指用于 general error 的样式 */
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 </style>

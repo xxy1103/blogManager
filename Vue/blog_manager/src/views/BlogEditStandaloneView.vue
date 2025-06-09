@@ -70,25 +70,28 @@ const hasUnsavedChanges = computed(() => {
 const fetchBlogToEdit = async () => {
   loading.value = true
   error.value = null
-  const { year, month, day, filename } = route.params
-  if (
-    Array.isArray(year) ||
-    Array.isArray(month) ||
-    Array.isArray(day) ||
-    Array.isArray(filename)
-  ) {
-    error.value = '无效的博客链接参数'
+  // const { year, month, day, filename } = route.params; // Old way
+  const idParam = route.params.id // New: Get id from route params
+
+  if (typeof idParam !== 'string' || idParam === 'undefined' || !idParam) {
+    error.value = '无效或未提供博客 ID'
     loading.value = false
+    console.error('Invalid or missing blog ID from route params:', idParam)
+    return
+  }
+
+  const numericId = parseInt(idParam, 10)
+  console.log('Parsed numericId for editing:', numericId)
+
+  if (isNaN(numericId)) {
+    error.value = '博客 ID 格式无效'
+    loading.value = false
+    console.error('Invalid blog ID format after parsing for editing:', idParam)
     return
   }
 
   try {
-    const fetchedBlog = await getBlogDetail(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-    )
+    const fetchedBlog = await getBlogDetail(numericId) // Call with numericId
     if (fetchedBlog) {
       blog.value = fetchedBlog
       initialContent.value = fetchedBlog.content // Store initial content
@@ -132,13 +135,10 @@ const initEditor = (content: string) => {
             return
           }
 
-          // Use blog filename (without .md) as the relative path for the image directory
-          let blogFilename = route.params.filename as string
-          if (Array.isArray(blogFilename)) {
-            // Should not happen based on route setup, but good practice
-            blogFilename = blogFilename[0]
-          }
-          const relativePathForImage = blogFilename.replace(/\.md$/, '')
+          // Use blog ID as part of the relative path for the image directory
+          // This ensures images are somewhat grouped by blog post if desired,
+          // or use a more general path if preferred.
+          const relativePathForImage = `blog-images/${blog.value.id}`
 
           const timestamp = Date.now()
           const extension = blob.name.split('.').pop() || blob.type.split('/')[1] || 'png'
@@ -198,28 +198,22 @@ const saveBlog = async () => {
   if (!blog.value || !editorInstance) return
 
   const currentMarkdown = editorInstance.getMarkdown()
-  const { year, month, day, filename } = route.params
-  if (
-    Array.isArray(year) ||
-    Array.isArray(month) ||
-    Array.isArray(day) ||
-    Array.isArray(filename)
-  ) {
-    saveMessage.value = '无效的博客链接参数，无法保存。'
-    saveSuccess.value = false
-    return
+
+  // Prepare the data to be sent to the backend, matching the API requirements
+  const blogDataToUpdate = {
+    title: blog.value.title, // Assuming title is part of blog.value and doesn't change here
+    categories: blog.value.categories, // Assuming categories are part of blog.value
+    tags: blog.value.tags, // Assuming tags are part of blog.value
+    saying: blog.value.saying, // Assuming saying is part of blog.value
+    content: currentMarkdown, // The updated content from the editor
   }
 
   isSaving.value = true
   saveMessage.value = ''
   try {
-    const result = await updateBlogContent(
-      year as string,
-      month as string,
-      day as string,
-      filename as string,
-      currentMarkdown,
-    )
+    // Call updateBlogContent with the blog's ID and the prepared data
+    const result = await updateBlogContent(blog.value.id, blogDataToUpdate)
+
     saveSuccess.value = result.success
     saveMessage.value = result.message
     if (result.success) {
