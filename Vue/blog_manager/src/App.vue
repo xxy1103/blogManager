@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import { useAuthStore } from './stores/auth.js'
 import AIChatWindow from './components/AIChatWindow.vue'
+
+const authStore = useAuthStore()
+
+// 登出处理
+function handleLogout() {
+  authStore.logout()
+  // 可以在这里添加登出后的逻辑，比如显示提示消息
+}
 </script>
 
 <template>
@@ -11,9 +20,24 @@ import AIChatWindow from './components/AIChatWindow.vue'
       </RouterLink>
       <nav>
         <RouterLink to="/" class="nav-link">首页</RouterLink>
-        <RouterLink to="/blog/add" class="nav-link">写作</RouterLink>
+        <RouterLink v-if="authStore.isAuthenticated" to="/blog/add" class="nav-link"
+          >写作</RouterLink
+        >
         <RouterLink to="/about" class="nav-link">关于</RouterLink>
         <span class="nav-link search-icon">🔍</span>
+
+        <!-- 未登录用户显示登录/注册链接 -->
+        <template v-if="!authStore.isAuthenticated">
+          <RouterLink to="/login" class="nav-link auth-link">登录</RouterLink>
+          <RouterLink to="/register" class="nav-link auth-link">注册</RouterLink>
+        </template>
+
+        <!-- 已登录用户显示用户名和登出按钮 -->
+        <template v-else>
+          <span class="nav-link user-info">{{ authStore.user?.username }}</span>
+          <RouterLink to="/settings" class="nav-link">设置</RouterLink>
+          <button @click="handleLogout" class="nav-link logout-btn">登出</button>
+        </template>
       </nav>
     </div>
   </header>
@@ -109,6 +133,35 @@ nav a.router-link-exact-active {
 .search-icon:hover {
   color: white;
   transform: scale(1.1);
+}
+
+.auth-link {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-left: 0.5rem;
+}
+
+.auth-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.user-info {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  margin-left: 0.5rem;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+  border-color: rgba(255, 0, 0, 0.3);
 }
 
 .main-content {

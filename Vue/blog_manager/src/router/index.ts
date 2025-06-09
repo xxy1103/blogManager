@@ -5,6 +5,9 @@ import BlogDetailView from '../views/BlogDetailView.vue'
 import BlogEditStandaloneView from '../views/BlogEditStandaloneView.vue'
 import BlogAddView from '../views/BlogAddView.vue' // 新增创建博客页面导入
 import SettingsView from '../views/SettingsView.vue' // 导入设置页面组件
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import { useAuthStore } from '../stores/auth.js'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,19 +43,56 @@ const router = createRouter({
       name: 'blog-edit-standalone',
       component: BlogEditStandaloneView,
       props: true,
+      meta: { requiresAuth: true },
     },
     {
       // 新增博客创建路由
       path: '/blog/add',
       name: 'blog-add',
       component: BlogAddView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/settings',
       name: 'settings',
       component: SettingsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+      meta: { hideForAuth: true },
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+      meta: { hideForAuth: true },
     },
   ],
+})
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+
+  // 初始化认证状态
+  authStore.initAuth()
+
+  // 需要认证的路由
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+    return
+  }
+
+  // 已登录用户访问登录/注册页面时重定向到首页
+  if (to.meta.hideForAuth && authStore.isAuthenticated) {
+    next('/')
+    return
+  }
+
+  next()
 })
 
 export default router
