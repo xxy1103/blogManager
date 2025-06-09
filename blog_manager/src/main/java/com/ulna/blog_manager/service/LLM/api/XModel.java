@@ -7,10 +7,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -20,12 +18,87 @@ import com.ulna.blog_manager.service.LLM.POST.POST;
 import com.ulna.blog_manager.service.LLM.callback.StreamCallback;
 
 
-class XModelPOSTMessage extends POSTMessage {
-    private String temperature;
+class XModelPOST extends POST {
+    private String user;
+    private Double temperature;
+    private Integer top_k;
+    private Integer max_tokens;
+    private Double presence_penalty;
+    private Double frequency_penalty;
 
-    public XModelPOSTMessage(String role, String content, String temperature) {
-        super(role, content);
+    public XModelPOST(String model, Boolean stream, POSTMessage[] messages, String user) {
+        super(model, stream, messages);
+        this.user = user;
+        // 设置讯飞星火的默认参数
+        this.temperature = 0.5;
+        this.top_k = 4;
+        this.max_tokens = 1024;
+        this.presence_penalty = 1.0;
+        this.frequency_penalty = 1.0;
+    }
+
+    // 重写getters以确保正确的JSON序列化
+    @Override
+    public String getModel() {
+        return super.getModel();
+    }
+
+    @Override
+    public Boolean getStream() {
+        return super.getStream();
+    }
+
+    @Override
+    public POSTMessage[] getMessages() {
+        return super.getMessages();
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
         this.temperature = temperature;
+    }
+
+    public Integer getTop_k() {
+        return top_k;
+    }
+
+    public void setTop_k(Integer top_k) {
+        this.top_k = top_k;
+    }
+
+    public Integer getMax_tokens() {
+        return max_tokens;
+    }
+
+    public void setMax_tokens(Integer max_tokens) {
+        this.max_tokens = max_tokens;
+    }
+
+    public Double getPresence_penalty() {
+        return presence_penalty;
+    }
+
+    public void setPresence_penalty(Double presence_penalty) {
+        this.presence_penalty = presence_penalty;
+    }
+
+    public Double getFrequency_penalty() {
+        return frequency_penalty;
+    }
+
+    public void setFrequency_penalty(Double frequency_penalty) {
+        this.frequency_penalty = frequency_penalty;
     }
 }
 
@@ -37,26 +110,38 @@ public class XModel extends LLM {
     public XModel(String APIKey, String APIUrl, String model) {
         super(APIKey, APIUrl, model);
     }
-    // 还没有实现将机器返回消息加入到消息数组中
     @Override
     public void callLLM(String prompt,String content, StreamCallback callback) {
-        // 这里调用 LLM 的 API 接口
-        String userId = "用户ID";
+        // 生成用户唯一ID（可以根据实际需求修改）
+        String userId = "user_" + System.currentTimeMillis();
         try {
-
-            POSTMessage message = new XModelPOSTMessage("user", prompt + content, this.getTemperature());
+            // 初始化消息数组
             if (this.messagesArray == null) {
                 this.messagesArray = new ArrayList<>();
+                // 添加系统消息（讯飞星火建议的格式）
+                POSTMessage systemMessage = new POSTMessage("system", "你是知识渊博的助理");
+                this.messagesArray.add(systemMessage);
             }
+
+            POSTMessage message = new POSTMessage("user", prompt + content);
             this.messagesArray.add(message);
             POSTMessage[] messages = messagesArray.toArray(new POSTMessage[0]);
-            // POST 请求体
-            POST post = new POST(this.getModel(), this.getIsStream(), messages);
+            
+            // 使用XModelPOST来支持讯飞星火的参数格式
+            XModelPOST post = new XModelPOST(this.getModel(), this.getIsStream(), messages, userId);
+            // 设置温度参数
+            if (this.getTemperature() != null) {
+                try {
+                    post.setTemperature(Double.parseDouble(this.getTemperature()));
+                } catch (NumberFormatException e) {
+                    logger.warn("温度参数格式错误，使用默认值: " + e.getMessage());
+                }
+            }
 
             Gson gson = new Gson();
 
             String json = gson.toJson(post);
-            logger.debug("请求数据: " + json);
+            logger.info("发送到讯飞星火的请求数据: " + json);
 
             String header = "Bearer " + this.getAPIKey();
             URL obj = new URL(this.getAPIUrl());
@@ -72,12 +157,15 @@ public class XModel extends LLM {
             os.flush();
             os.close();
 
+            int responseCode = con.getResponseCode();
+            logger.debug("讯飞星火响应码: " + responseCode);
+
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
-            StringBuilder LLMtext = new StringBuilder();
+            StringBuffer LLMtext = new StringBuffer();
             if (this.getIsStream()) {
+                Boolean isDone = false;
                 // 流式传输模式：每读取一行就回调一次
-                boolean isDone = false;
                 while ((inputLine = in.readLine()) != null) {
                     // 判断是否是最后的数据 (可根据实际API响应格式调整判断条件)
                     if(inputLine.startsWith("data: ")) {
@@ -85,22 +173,35 @@ public class XModel extends LLM {
                         if (data.equals("[DONE]")) {
                             isDone = true;
                             callback.onResponse(inputLine, isDone);
+                            System.out.println("流式传输结束");
                             break;
                         }
                         String LLMcontent = "";
                         try{
                             JsonObject jsonResponse = gson.fromJson(data, JsonObject.class);
+                            // 适配讯飞星火的响应格式
                             if(jsonResponse.has("choices") &&
                                jsonResponse.getAsJsonArray("choices").size() > 0 &&
-                                 jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().has("delta") &&
-                                    jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().get("delta").isJsonObject()) {
-                                LLMcontent = jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().get("delta").getAsJsonObject().get("content").getAsString();
+                               jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().has("delta")) {
+                                JsonObject delta = jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("delta");
+                                if (delta.has("content")) {
+                                    LLMcontent = delta.get("content").getAsString();
+                                }
                             }
+                            
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            logger.error("解析数据块时发生错误: " + e.getMessage());
+                            logger.error("原始数据: " + data);
                         }
-                        callback.onResponse(inputLine, isDone);
+                        callback.onResponse(inputLine, isDone);             
+
+                        System.out.println("流式传输数据: " + inputLine);
                         LLMtext.append(LLMcontent);
+                        
+                        // 添加调试日志
+                        if (!LLMcontent.isEmpty()) {
+                            logger.debug("提取的内容: " + LLMcontent);
+                        }
                     }
                 }
             } else {
@@ -123,10 +224,11 @@ public class XModel extends LLM {
                             .get("content").getAsString();
                     LLMtext.append(LLMcontent);
                 }
+                // 完整响应一次性回调
             }
             in.close();
 
-            POSTMessage message1 = new XModelPOSTMessage("assistant", LLMtext.toString(), this.getTemperature());
+            POSTMessage message1 = new POSTMessage("assistant", LLMtext.toString());
             this.messagesArray.add(message1);
         } catch (Exception e) {
             e.printStackTrace();

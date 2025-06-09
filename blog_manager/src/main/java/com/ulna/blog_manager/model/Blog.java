@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.io.IOException;
 
+import com.ulna.blog_manager.Config.Config;
+
 
 public class Blog implements Comparable<Blog>,Cloneable {
     private static final String FRONT_MATTER_DELIMITER = "---";

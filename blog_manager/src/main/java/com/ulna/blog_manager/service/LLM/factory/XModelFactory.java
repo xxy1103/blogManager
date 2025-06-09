@@ -10,8 +10,8 @@ import com.ulna.blog_manager.Config.Config;
 public class XModelFactory implements FactoryInterface {
 
     private String APIKey;
-    private final String APIUrl = "https://spark-api-open.xf-yun.com/v2/chat/completions";
-    private final String model = "x1";
+    private final String APIUrl = "https://spark-api-open.xf-yun.com/v1/chat/completions";
+    private final String model = "generalv3.5";
 
     /**
      * 构造函数
