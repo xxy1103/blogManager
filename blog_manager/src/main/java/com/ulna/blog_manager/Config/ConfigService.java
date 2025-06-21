@@ -83,17 +83,8 @@ public class ConfigService {
         
         if (config == null) {
             config = createDefaultConfigInMemory();
-            needsUpdate = true;
-        } else {
-            // 检查并设置默认路径
-            if (config.getBlogStoragePath() == null) {
-                config.setBlogStoragePath("");
-                needsUpdate = true;
-            }
-            if (config.getImageStoragePath() == null) {
-                config.setImageStoragePath("");
-                needsUpdate = true;
-            }
+            needsUpdate = true;        } else {
+            // 检查并设置默认值
             if (config.getXmodelAPIKey() == null) {
                 config.setXmodelAPIKey("");
                 needsUpdate = true;
@@ -117,20 +108,14 @@ public class ConfigService {
         config = createDefaultConfigInMemory();
         saveConfig(objectMapper);
     }
-    
-    /**
+      /**
      * 创建内存中的默认配置对象
      */
     private Config createDefaultConfigInMemory() {
-        String currentDir = System.getProperty("user.dir");
-        String blogStoragePath = currentDir + "/blogs";
-        String imageStoragePath = currentDir + "/images";
         String xmodelAPIKey = "your-xmodel-api-key";
         String bigmodelAPIKey = "your-bigmodel-api-key";
 
         Config defaultConfig = new Config();
-        defaultConfig.setBlogStoragePath(blogStoragePath);
-        defaultConfig.setImageStoragePath(imageStoragePath);
         defaultConfig.setXmodelAPIKey(xmodelAPIKey);
         defaultConfig.setBigmodelAPIKey(bigmodelAPIKey);
         return defaultConfig;
@@ -173,11 +158,8 @@ public class ConfigService {
         
         // 保存旧配置，以便更新失败时可以回滚
         Config oldConfig = this.config;
-        
-        try {
+          try {
             // 更新当前内存中的配置
-            this.config.setBlogStoragePath(newConfig.getBlogStoragePath());
-            this.config.setImageStoragePath(newConfig.getImageStoragePath());
             this.config.setXmodelAPIKey(newConfig.getXmodelAPIKey());
             this.config.setBigmodelAPIKey(newConfig.getBigmodelAPIKey());
             // 记录更新的配置

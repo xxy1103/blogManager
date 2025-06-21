@@ -1,13 +1,9 @@
 package com.ulna.blog_manager.repository; 
 
-import com.ulna.blog_manager.Config.Config;
 import com.ulna.blog_manager.model.Blog; 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 
 import jakarta.annotation.PostConstruct; // 如果使用较新的 Spring Boot/Jakarta EE
 // import javax.annotation.PostConstruct; // 如果使用较旧的 Spring Boot/Java EE
@@ -17,7 +13,6 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class BlogFileService {
@@ -26,14 +21,10 @@ public class BlogFileService {
 
     private final Path storageLocation; // 博客文件存储的根目录路径对象
 
-
-    private Config config;
-
-    @Autowired
-    public BlogFileService(Config config) {
-        this.config = config;
-        // 从配置中获取存储路径，并确保是绝对路径
-        this.storageLocation = Paths.get(config.getBlogStoragePath()).toAbsolutePath().normalize();
+    public BlogFileService() {
+        // 使用项目根目录下的 blogs 文件夹作为固定存储路径
+        String currentDir = System.getProperty("user.dir");
+        this.storageLocation = Paths.get(currentDir, "blogs").toAbsolutePath().normalize();
         logger.info("博客存储目录: {}", storageLocation);
     }
 
