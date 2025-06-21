@@ -42,7 +42,7 @@
               </router-link>
 
               <div class="blog-meta">
-                <span class="blog-date">📅 {{ formatDate(blog.dateTime) }}</span>
+                <span class="blog-date">📅 {{ formatDate(blog.date) }}</span>
                 <span class="blog-categories">📁 {{ blog.categories }}</span>
               </div>
 
@@ -64,8 +64,7 @@
       <p>点击右上角的"创建新博客"按钮开始写作吧！</p>
     </div>
 
-    <!-- 设置图标 -->
-    <router-link to="/settings" class="settings-icon" title="系统设置"> ⚙️ </router-link>
+
   </div>
 </template>
 
