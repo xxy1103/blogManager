@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 echo ====================================
 echo 博客管理系统数据库设置脚本
 echo ====================================
@@ -18,21 +19,21 @@ echo [信息] 检测到MySQL已安装
 echo.
 
 REM 提示用户输入数据库连接信息
-set /p DB_USER="请输入MySQL用户名 (默认: root): " 
-if "%DB_USER%"=="" set DB_USER=root
+set /p "DB_USER=请输入MySQL用户名 (默认: root): "
+if "%DB_USER%"=="" set "DB_USER=root"
 
-set /p DB_PASSWORD="请输入MySQL密码: " 
+set /p "DB_PASSWORD=请输入MySQL密码: "
 if "%DB_PASSWORD%"=="" (
     echo [错误] 密码不能为空
     pause
     exit /b 1
 )
 
-set /p DB_HOST="请输入MySQL主机地址 (默认: localhost): "
-if "%DB_HOST%"=="" set DB_HOST=localhost
+set /p "DB_HOST=请输入MySQL主机地址 (默认: localhost): "
+if "%DB_HOST%"=="" set "DB_HOST=localhost"
 
-set /p DB_PORT="请输入MySQL端口 (默认: 3306): "
-if "%DB_PORT%"=="" set DB_PORT=3306
+set /p "DB_PORT=请输入MySQL端口 (默认: 3306): "
+if "%DB_PORT%"=="" set "DB_PORT=3306"
 
 echo.
 echo ====================================
@@ -45,7 +46,7 @@ echo.
 
 REM 测试数据库连接
 echo [信息] 测试数据库连接...
-mysql -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -p%DB_PASSWORD% -e "SELECT 1;" >nul 2>&1
+mysql -h "%DB_HOST%" -P "%DB_PORT%" -u "%DB_USER%" -p"%DB_PASSWORD%" -e "SELECT 1;" >nul 2>&1
 if errorlevel 1 (
     echo [错误] 数据库连接失败，请检查连接信息
     pause
@@ -57,7 +58,7 @@ echo.
 
 REM 执行数据库创建脚本
 echo [信息] 开始创建数据库和表结构...
-mysql -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -p%DB_PASSWORD% < database_setup.sql
+mysql -h "%DB_HOST%" -P "%DB_PORT%" -u "%DB_USER%" -p"%DB_PASSWORD%" < database_setup.sql
 if errorlevel 1 (
     echo [错误] 数据库创建失败
     pause
@@ -69,8 +70,8 @@ echo.
 
 REM 更新application.properties配置文件
 echo [信息] 更新应用配置文件...
-set APP_PROPS=src\main\resources\application.properties
-set TEMP_PROPS=%APP_PROPS%.temp
+set "APP_PROPS=src\main\resources\application.properties"
+set "TEMP_PROPS=%APP_PROPS%.temp"
 
 REM 备份原配置文件
 copy "%APP_PROPS%" "%APP_PROPS%.backup" >nul 2>&1
