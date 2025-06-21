@@ -2,7 +2,12 @@
   <div class="blog-list-view">
     <div class="header-container">
       <h1 class="page-title">我的博客</h1>
-      <router-link to="/blog/add" class="add-blog-btn"> <span>+</span> 创建新博客 </router-link>
+      <div class="header-actions">
+        <router-link to="/blog/search" class="search-blog-btn">
+          <span>🔍</span> 搜索博客
+        </router-link>
+        <router-link to="/blog/add" class="add-blog-btn"> <span>+</span> 创建新博客 </router-link>
+      </div>
     </div>
 
     <div class="banner-image">
@@ -37,7 +42,7 @@
               </router-link>
 
               <div class="blog-meta">
-                <span class="blog-date">📅 {{ formatDate(blog.date) }}</span>
+                <span class="blog-date">📅 {{ formatDate(blog.dateTime) }}</span>
                 <span class="blog-categories">📁 {{ blog.categories }}</span>
               </div>
 
@@ -122,6 +127,9 @@ onMounted(() => {
   max-width: 900px;
   margin-bottom: 20px;
   padding: 0 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
 }
 
 .page-title {
@@ -130,6 +138,40 @@ onMounted(() => {
   margin: 0;
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.search-blog-btn {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-accent);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
+.search-blog-btn span {
+  margin-right: 5px;
+  font-size: 16px;
+}
+
+.search-blog-btn:hover {
+  background-color: var(--color-accent-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .add-blog-btn {
@@ -141,6 +183,9 @@ onMounted(() => {
   border-radius: 4px;
   font-weight: 500;
   transition: all 0.3s ease;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
 }
 
 .add-blog-btn span {
@@ -442,6 +487,18 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-blog-btn,
+  .add-blog-btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
   }
 
   .banner-image {

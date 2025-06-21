@@ -4,6 +4,7 @@ import BlogListView from '../views/BlogListView.vue'
 import BlogDetailView from '../views/BlogDetailView.vue'
 import BlogEditStandaloneView from '../views/BlogEditStandaloneView.vue'
 import BlogAddView from '../views/BlogAddView.vue' // 新增创建博客页面导入
+import BlogSearchView from '../views/BlogSearchView.vue' // 新增搜索博客页面导入
 // import SettingsView from '../views/SettingsView.vue' // 导入设置页面组件 - 已移除
 import DashboardView from '../views/DashboardView.vue' // 导入仪表盘页面
 import LoginView from '../views/LoginView.vue'
@@ -58,6 +59,13 @@ const router = createRouter({
       path: '/blog/add',
       name: 'blog-add',
       component: BlogAddView,
+      meta: { requiresAuth: true },
+    },
+    {
+      // 新增博客搜索路由
+      path: '/blog/search',
+      name: 'blog-search',
+      component: BlogSearchView,
       meta: { requiresAuth: true },
     },
     {

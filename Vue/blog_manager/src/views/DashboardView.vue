@@ -52,9 +52,9 @@
           <span class="btn-icon">📚</span>
           查看所有博客
         </button>
-        <button @click="$router.push('/settings')" class="action-btn">
+        <button @click="$router.push('/blog/search')" class="action-btn">
           <span class="btn-icon">⚙️</span>
-          系统设置
+          搜索blog
         </button>
         <button @click="showAIChat = true" class="action-btn">
           <span class="btn-icon">🤖</span>

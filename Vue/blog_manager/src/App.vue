@@ -24,8 +24,11 @@ function handleLogout() {
         <RouterLink v-if="authStore.isAuthenticated" to="/blog/add" class="nav-link"
           >写作</RouterLink
         >
+        <RouterLink v-if="authStore.isAuthenticated" to="/blog/search" class="nav-link search-link">
+          <span class="search-icon">🔍</span>
+          <span class="search-text">搜索</span>
+        </RouterLink>
         <RouterLink to="/about" class="nav-link">关于</RouterLink>
-        <span class="nav-link search-icon">🔍</span>
 
         <!-- 未登录用户显示登录/注册链接 -->
         <template v-if="!authStore.isAuthenticated">
@@ -125,6 +128,20 @@ nav a.router-link-exact-active {
   color: white;
   background-color: rgba(255, 255, 255, 0.1);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.search-link {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.search-icon {
+  font-size: 1.1rem;
+}
+
+.search-text {
+  font-size: 0.95rem;
 }
 
 .search-icon {
@@ -249,6 +266,10 @@ nav a.router-link-exact-active {
 
   .footer-wrapper {
     padding: 0 1rem;
+  }
+
+  .search-text {
+    display: none;
   }
 }
 </style>
