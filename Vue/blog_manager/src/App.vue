@@ -36,7 +36,7 @@ function handleLogout() {
         <!-- 已登录用户显示用户名和登出按钮 -->
         <template v-else>
           <span class="nav-link user-info">{{ authStore.user?.username }}</span>
-          <RouterLink to="/settings" class="nav-link">设置</RouterLink>
+
           <button @click="handleLogout" class="nav-link logout-btn">登出</button>
         </template>
       </nav>

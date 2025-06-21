@@ -1,6 +1,7 @@
 import { useAuthStore } from '../stores/auth.js'
 
-const API_BASE_URL = 'http://localhost:5200' // 根据 API 文档
+// 移除baseURL，使用Vite代理
+const API_BASE_URL = '' // 使用相对路径，通过Vite代理
 
 interface StreamChatCallbacks {
   onStart?: (event: MessageEvent) => void

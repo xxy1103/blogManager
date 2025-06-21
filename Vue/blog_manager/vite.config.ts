@@ -14,7 +14,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0', // 允许其他设备访问
-    port: 5173, // 可选，指定端口号
+    port: 5174, // 更新端口号
     proxy: {
       '/api': {
         target: 'http://localhost:5200',

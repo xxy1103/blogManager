@@ -80,7 +80,7 @@
 
         <h1>{{ blog.title }}</h1>
         <p class="meta">
-          <span>📅 发布于：{{ formatDate(blog.dateTime) }}</span> |
+          <span>📅 发布于：{{ formatDate(blog.date) }}</span> |
           <span>📁 分类：{{ blog.categories }}</span> |
           <span>🏷️ 标签：{{ blog.tags.join(', ') }}</span>
         </p>

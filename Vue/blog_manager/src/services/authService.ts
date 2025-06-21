@@ -9,7 +9,7 @@ import type {
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: 'http://localhost:5200',
+  // 移除baseURL，使用Vite代理
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

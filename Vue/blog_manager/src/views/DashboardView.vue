@@ -80,7 +80,7 @@
             <h3>{{ blog.title }}</h3>
             <p class="blog-meta">
               <span class="category">{{ blog.categories }}</span>
-              <span class="date">{{ formatDate(blog.dateTime) }}</span>
+              <span class="date">{{ formatDate(blog.date) }}</span>
             </p>
             <div class="blog-tags">
               <span v-for="tag in blog.tags" :key="tag" class="tag">{{ tag }}</span>
