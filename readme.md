@@ -62,6 +62,7 @@ Blog 管理系统是一个功能完整的现代化博客管理平台，支持博
 ## 🚀 快速开始
 
 ### 环境要求
+
 - Java 17+
 - Node.js 18+
 - MySQL 8.0+
@@ -70,12 +71,14 @@ Blog 管理系统是一个功能完整的现代化博客管理平台，支持博
 ### ⚡ 快速启动
 
 1. **克隆项目**
+
 ```bash
-git clone <repository-url>
+git clone git@github.com:xxy1103/blogManager.git
 cd blogManager
 ```
 
 2. **数据库配置**
+
 ```bash
 # 执行数据库脚本
 mysql -u root -p < blog_manager/database_setup.sql
@@ -85,12 +88,14 @@ mysql -u root -p < blog_manager/database_setup.sql
 ```
 
 3. **启动后端服务**
+
 ```bash
 cd blog_manager
 mvn spring-boot:run
 ```
 
 4. **启动前端服务**
+
 ```bash
 cd Vue/blog_manager
 npm install
@@ -98,6 +103,7 @@ npm run dev
 ```
 
 5. **访问应用**
+
 - 前端地址: http://localhost:5173
 - 后端地址: http://localhost:5200
 - 默认账户: admin / admin123
@@ -109,6 +115,7 @@ npm run dev
 👉 **[完整部署文档](项目部署文档.md)**
 
 该文档包含：
+
 - 🔧 详细的环境配置说明
 - 🗄️ 数据库设置步骤
 - ⚙️ 配置文件说明
@@ -230,61 +237,6 @@ blogManager/
 │   └── package.json      # NPM 配置
 └── image/                # 静态资源
 ```
-
-## � API文档
-
-详细的API文档请查看：
-- [后端API文档](blog_manager/target/classes/static/api-documentation.md)
-- [图片API文档](blog_manager/target/classes/static/image-api-documentation.md)
-- [LLM流式API文档](blog_manager/target/classes/static/llm-streaming-api-documentation.md)
-
-## �🚀 部署说明
-
-### 📋 部署概览
-
-本项目支持多种部署方式，包括开发环境、生产环境和Docker部署。
-
-**快速部署：**
-1. 后端：`mvn spring-boot:run`
-2. 前端：`npm run dev`
-
-### 📖 完整部署指南
-
-如需了解详细的部署配置和生产环境部署，请查看：
-
-👉 **[详细部署文档](项目部署文档.md)**
-
-该文档涵盖：
-- 🔧 系统环境要求与配置
-- 🗄️ 数据库详细设置步骤
-- ⚙️ 配置文件详细说明
-- 🚀 生产环境完整部署流程
-- 🐳 Docker容器化部署
-- ❗ 常见问题与解决方案
-
-### 生产环境部署
-
-1. **后端部署**
-
-```bash
-cd blog_manager
-mvn clean package -DskipTests
-java -jar target/blog_manager-0.0.1-SNAPSHOT.jar
-```
-
-2. **前端部署**
-
-```bash
-cd Vue/blog_manager
-npm run build
-# 将 dist 目录部署到 Web 服务器
-```
-
-3. **数据库配置**
-
-- 确保 MySQL 服务运行
-- 执行数据库初始化脚本
-- 配置正确的数据库连接参数
 
 ## 🤝 贡献指南
 
