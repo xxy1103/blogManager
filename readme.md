@@ -256,7 +256,6 @@ blogManager/
 
 - 📧 邮箱：`xianxingyuan520@outlook.com`
 - 🐛 问题反馈：[Issues](../../issues)
-- 💡 功能建议：[Discussions](../../discussions)
 
 ---
 
